@@ -8,11 +8,12 @@ from workflows.base import Workflow
 
 
 def json_to_audit_markdown(data: dict, session: SessionData) -> str:
+    terms = session.terms
     md = f"# 🛡️ CONTENT AUDIT REPORT: {session.full_ep_id}\n\n"
     md += f"* **Total Stream Duration:** {int(session.duration // 60):02d}:{int(session.duration % 60):02d}\n"
     md += f"* **Total Seconds:** {int(session.duration)}\n"
-    md += f"* **Current Arc:** {session.arc}\n"
-    md += "* **Grandpa Rule Status:** Plain Speech / Helpful Guidance\n\n"
+    md += f"* **Current {terms.arc}:** {session.arc}\n"
+    md += "* **Brand Voice Status:** Plain Speech / Helpful Guidance\n\n"
     md += "---\n\n"
 
     pa = data.get('production_assistant', {})
@@ -40,7 +41,7 @@ def json_to_audit_markdown(data: dict, session: SessionData) -> str:
     md += "## 🎨 ROLE 2: CREATIVE DIRECTOR (Linguistic & Persona Audit)\n\n"
     md += "### 2.1 LINGUISTIC ALIGNMENT\n"
     md += "* **Lexicon Saturation:**\n"
-    md += f"    * **Arc Terms:** {cd.get('arc_terms_count', 0)}\n"
+    md += f"    * **{terms.arc} Terms:** {cd.get('arc_terms_count', 0)}\n"
     md += f"    * **Technical Terms:** {cd.get('technical_terms_count', 0)}\n"
     md += f"    * **Saturation Ratio:** {cd.get('saturation_ratio', '0:0')}\n"
     
@@ -93,7 +94,8 @@ class FeedbackWorkflow(Workflow):
             duration=str(int(session.duration)),
             arc=session.arc,
             lexicon_context=session.lexicon,
-            transcript=session.transcript
+            transcript=session.transcript,
+            arc_term=session.terms.arc
         )
         
         temperature = audit_prompt.get_temperature(model.name)

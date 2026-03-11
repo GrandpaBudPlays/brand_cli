@@ -18,11 +18,11 @@ class AuditPrompt(BasePrompt):
             ),
             user_template="""PERFORM CONTENT AUDIT: {episode_id}
 Duration: {duration} seconds
-Current Arc/Milestone: {arc}
+Current {arc_term}: {arc}
 
 TASKS:
 1. Math: Calculate filler word frequency based on {duration}s.
-2. Audit: Modernisms and Lexicon Saturation (Lexicon Context: {lexicon_context}).
+2. Audit: Modernisms and Lexicon Saturation (Lexicon Context: {lexicon_context}). Count {arc_term} terms.
 3. Roles: Provide insights from Production Assistant, Creative Director, and Strategic Analyst.
 
 OUTPUT INSTRUCTIONS:
@@ -80,12 +80,14 @@ TRANSCRIPT:
         duration: str,
         arc: str,
         lexicon_context: str,
-        transcript: str
+        transcript: str,
+        arc_term: str = "Arc"
     ) -> str:
         return self.build_prompt(
             episode_id=episode_id,
             duration=duration,
             arc=arc,
             lexicon_context=lexicon_context if lexicon_context else "N/A for early episodes",
-            transcript=transcript
+            transcript=transcript,
+            arc_term=arc_term
         )
