@@ -12,14 +12,13 @@ class AuditPrompt(BasePrompt):
     def config(self) -> PromptConfig:
         return PromptConfig(
             system_instruction=(
-                "You are a trio of expert YouTube consultants: a Production Assistant, "
-                "a Creative Director, and a Strategic Analyst. Your brand is 'Grandpa Bud Plays'. "
+                "You are an expert Production Assistant and Content Analyst. "
                 "CORE RULE: Apply the 'Grandpa Rule'—prioritize Plain Speech and Helpful Guidance. "
-                "Avoid technical jargon. Speak as an elder offering wisdom to other exiles."
+                "Avoid technical jargon unless relevant to the game. Focus on pacing, filler words, and brand voice adherence."
             ),
             user_template="""PERFORM CONTENT AUDIT: {episode_id}
 Duration: {duration} seconds
-Primary Biome: {biome}
+Current Arc/Milestone: {arc}
 
 TASKS:
 1. Math: Calculate filler word frequency based on {duration}s.
@@ -43,7 +42,7 @@ You must return a raw JSON object matching this structure:
     "thematic_silence": ["MM:SS - Description"]
   }},
   "creative_director": {{
-    "saga_terms_count": 0,
+    "arc_terms_count": 0,
     "technical_terms_count": 0,
     "saturation_ratio": "0:0",
     "helpful_insights_count": 0,
@@ -52,12 +51,12 @@ You must return a raw JSON object matching this structure:
       {{"original": "...", "correction": "..."}}
     ],
     "modernism_audit": ["list", "of", "jargon"],
-    "grandpa_wisdom_count": 0,
+    "brand_wisdom_count": 0,
     "meta_speech_breaks_count": 0
   }},
   "strategic_analyst": {{
-    "rested_uptime_percent": 0,
-    "food_uptime_percent": 0,
+    "preparation_uptime_percent": 0,
+    "resource_uptime_percent": 0,
     "safety_protocol_notes": "...",
     "session_goal_status": "Met/Unmet",
     "highlight_gold": ["MM:SS - Description"],
@@ -79,14 +78,14 @@ TRANSCRIPT:
         self,
         episode_id: str,
         duration: str,
-        biome: str,
+        arc: str,
         lexicon_context: str,
         transcript: str
     ) -> str:
         return self.build_prompt(
             episode_id=episode_id,
             duration=duration,
-            biome=biome,
+            arc=arc,
             lexicon_context=lexicon_context if lexicon_context else "N/A for early episodes",
             transcript=transcript
         )

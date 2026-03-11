@@ -13,7 +13,7 @@ def json_to_gold_markdown(data: dict, session: SessionData) -> str:
     md += f"## 📝 Summary Table\n{data.get('summary_table', '')}\n\n"
     md += f"## 🧠 Editor's Notes\n{data.get('editors_notes', '')}\n\n"
     
-    md += "## 🪵 Ledger Entry (Campfire Story)\n"
+    md += "## 🪵 Ledger Entry (Narrative Summary)\n"
     md += f"> {data.get('ledger_entry', '')}\n\n"
     
     md += "## ⏱️ YouTube Chapters\n"
@@ -31,9 +31,9 @@ def json_to_gold_markdown(data: dict, session: SessionData) -> str:
         md += f"- **{clip.get('time', '00:00')}**: {clip.get('description', '')}\n"
     md += "\n"
     
-    md += "## ⚔️ Type C (Saga Components)\n"
-    for saga in data.get('type_c_saga', []):
-        md += f"- **{saga.get('time', '00:00')}**: {saga.get('description', '')}\n"
+    md += "## ⚔️ Type C (Arc/Milestone Components)\n"
+    for arc_comp in data.get('type_c_arc', []):
+        md += f"- **{arc_comp.get('time', '00:00')}**: {arc_comp.get('description', '')}\n"
     md += "\n"
     
     return md

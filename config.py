@@ -6,11 +6,12 @@ DEFAULT_CONFIG_PATH = pathlib.Path.cwd() / "brand_config.json"
 
 DEFAULT_CONFIG = {
     "archive": {
-        "valheim_root": "010-Valheim/Chronicles-Of-The-Exile",
-        "lexicon_path": "010-Valheim/Saga-Lexicon-Valheim.md"
+        "content_root": "010-Valheim/Chronicles-Of-The-Exile",
+        "global_lexicon_path": "010-Valheim/Saga-Lexicon-Valheim.md",
+        "arc_metadata_file": "Biome.md"
     },
     "brand": {
-        "default_biomes": {
+        "default_arcs": {
             "Saga I": "Meadows",
             "Saga II": "Black Forest",
             "Saga III": "Swamp",

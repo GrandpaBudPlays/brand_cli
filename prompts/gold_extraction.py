@@ -12,18 +12,17 @@ class GoldExtractionPrompt(BasePrompt):
     def config(self) -> PromptConfig:
         return PromptConfig(
             system_instruction=(
-                "You are a trio of expert YouTube consultants: a Production Assistant, "
-                "a Creative Director, and a Strategic Analyst. Your brand is 'Grandpa Bud Plays'. "
-                "CORE RULE: Apply the 'Grandpa Rule'—prioritize Plain Speech and Helpful Guidance. "
-                "Avoid technical jargon. Speak as an elder offering wisdom to other exiles."
+                "You are an expert Production Assistant and Content Analyst. "
+                "CORE RULE: Apply the 'Brand Rule'—prioritize clear speech and helpful guidance. "
+                "Avoid technical jargon unless relevant to the game. Focus on extracting the most engaging and valuable moments."
             ),
             user_template="""TASK: STRATEGIC HIGHLIGHT GOLD AUDIT
 
 CATEGORIES:
-- Type A (Shorts): 15-60s 'Grandpa Lessons' + On-Screen Hook.
+- Type A (Shorts): 15-60s 'Lessons/Hooks' + On-Screen Hook.
 - Type B (Clips): 1-5m Narrative beats + Strategic Rationale.
-- Type C (Saga Components): Atmospheric/Combat montages + Theme.
-- Type D (Exile's Map): YouTube Chapters. Start at 0:00. Pacing: {pacing}.
+- Type C (Arc/Milestone Components): Atmospheric/Action montages + Theme.
+- Type D (Timeline Map): YouTube Chapters. Start at 0:00. Pacing: {pacing}.
   CRITICAL YOUTUBE CHAPTER RULES:
   1. The first timestamp MUST be exactly "00:00"
   2. The first chapter MUST be named exactly "00:00 Intro" (or similar, but starting with 00:00).
@@ -36,14 +35,14 @@ You must return a raw JSON object matching this structure:
 {{
   "summary_table": "A brief overview of the episode's highlights.",
   "editors_notes": "Your strategic notes and rationale.",
-  "ledger_entry": "A 150-300 word creative summary of the episode in the style of Grandpa Bud narrating a campfire story.",
+  "ledger_entry": "A 150-300 word creative summary of the episode reflecting the brand's narrative voice.",
   "type_a_shorts": [
     {{"time": "MM:SS", "description": "Short description of the hook/lesson"}}
   ],
   "type_b_clips": [
     {{"time": "MM:SS", "description": "Narrative beat / rationale"}}
   ],
-  "type_c_saga": [
+  "type_c_arc": [
     {{"time": "MM:SS", "description": "Theme / montage description"}}
   ],
   "youtube_chapters": [

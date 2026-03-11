@@ -19,9 +19,9 @@ A command-line tool designed to assist production teams with their workflow pipe
 ## ✨ Features
 
 - **Tactical Stream Audits:** Evaluates transcripts for pacing, filler words, and brand voice adherence (e.g., plain speech, guidance rules).
-- **Strategic Gold Extraction:** Automatically identifies and timestamps moments for Shorts (Type A), Clips (Type B), Saga Montages (Type C), and strict YouTube Chapters.
+- **Strategic Gold Extraction:** Automatically identifies and timestamps moments for Shorts (Type A), Clips (Type B), Narrative/Action Montages (Type C), and strict YouTube Chapters.
 - **Automated YouTube Drafting:** A multi-pass pipeline that generates complete "Triple-Threat" YouTube descriptions (Hook, Lore, Chronicle) and automatically injects SEO keywords.
-- **Agnostic Architecture:** Completely decoupled from the content repository. Point it at any archive directory on your machine using a simple JSON configuration.
+- **Agnostic Architecture:** Completely decoupled from the content repository. Point it at any Media Asset Management (MAM) archive on your machine using a simple JSON configuration.
 - **Built-in Cost & Token Tracking:** Monitors API usage and prevents token-limit crashes by utilizing robust Gemini API wrappers.
 
 ---
@@ -55,20 +55,21 @@ echo "GEMINIAPIKEY=your_actual_api_key_here" > .env
 
 ## ⚙️ Configuration
 
-Brand-CLI uses a modern JSON configuration structure. By default, it looks for `brand_config.json` in the current working directory, or you can specify a path using the `BRAND_CONFIG_PATH` environment variable.
+Brand-CLI uses a modern JSON configuration structure built around standard Media Asset Management (MAM) terms. By default, it looks for `brand_config.json` in the current working directory, or you can specify a path using the `BRAND_CONFIG_PATH` environment variable.
 
 Create a `brand_config.json` file to point the CLI to your specific content archive:
 
 ```json
 {
     "archive": {
-        "valheim_root": "/absolute/path/to/your/Content-Archive",
-        "lexicon_path": "/absolute/path/to/your/Content-Archive/Lexicon.md"
+        "content_root": "/absolute/path/to/your/Content-Archive",
+        "global_lexicon_path": "/absolute/path/to/your/Content-Archive/Global-Lexicon.md",
+        "arc_metadata_file": "Arc.md"
     },
     "brand": {
-        "default_biomes": {
-            "Saga I": "Meadows",
-            "Saga II": "Black Forest"
+        "default_arcs": {
+            "Season 1": "The Beginning",
+            "Season 2": "The Journey"
         }
     },
     "reports": {

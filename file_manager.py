@@ -15,15 +15,15 @@ class SessionData:
     target_filename: str
     path: str
     saga: str
-    biome: str
+    arc: str  # Previously biome
     transcript: str
     lexicon: str
     duration: float
 
 
 def find_transcript_and_metadata(target_filename):
-    valheim_root_cfg = CONFIG["archive"].get("valheim_root", "010-Valheim/Chronicles-Of-The-Exile")
-    search_path = pathlib.Path(valheim_root_cfg).resolve()
+    content_root_cfg = CONFIG["archive"].get("content_root", "010-Valheim/Chronicles-Of-The-Exile")
+    search_path = pathlib.Path(content_root_cfg).resolve()
     found_files = list(search_path.rglob(target_filename))
 
     if not found_files:
@@ -32,23 +32,25 @@ def find_transcript_and_metadata(target_filename):
     transcript_path = found_files[0]
     saga_folder_name = transcript_path.parent.name
     current_dir = transcript_path.parent
-    biome_name = "Unknown"
+    arc_name = "Unknown"
+    
+    metadata_filename = CONFIG["archive"].get("arc_metadata_file", "Biome.md")
 
     while current_dir != search_path.parent:
-        biome_file = current_dir / "Biome.md"
-        if biome_file.exists():
-            with open(biome_file, 'r', encoding='utf-8') as f:
-                biome_name = f.read().strip()
+        arc_file = current_dir / metadata_filename
+        if arc_file.exists():
+            with open(arc_file, 'r', encoding='utf-8') as f:
+                arc_name = f.read().strip()
             break
         current_dir = current_dir.parent
 
-    if biome_name == "Unknown":
-        default_biomes = CONFIG["brand"].get("default_biomes", {})
-        biome_name = default_biomes.get(saga_folder_name, "Unknown/Multiple")
+    if arc_name == "Unknown":
+        default_arcs = CONFIG["brand"].get("default_arcs", {})
+        arc_name = default_arcs.get(saga_folder_name, "Unknown/Multiple")
 
     return {
         "path": transcript_path,
-        "biome": biome_name,
+        "arc": arc_name,
         "saga": transcript_path.parent.name
     }
 
@@ -92,7 +94,7 @@ def read_file(path: str) -> str:
 def resolve_lexicon_data(season_str: str, episode_str: str) -> str:
     ep_num_match = re.search(r'(\d+)', episode_str)
     if ep_num_match and int(ep_num_match.group(1)) > 35:
-        lexicon_path_cfg = CONFIG["archive"].get("lexicon_path", "010-Valheim/Saga-Lexicon-Valheim.md")
+        lexicon_path_cfg = CONFIG["archive"].get("global_lexicon_path", "010-Valheim/Saga-Lexicon-Valheim.md")
         lexicon_path = str(pathlib.Path(lexicon_path_cfg).resolve())
         print(f"Loading Lexicon: {lexicon_path}")
         return read_file(lexicon_path)
@@ -136,8 +138,8 @@ def prepare_session_assets(season: str, episode: str) -> SessionData:
 
     file_info = find_transcript_and_metadata(target_filename)
     if not file_info:
-        valheim_root_cfg = CONFIG["archive"].get("valheim_root", "010-Valheim/Chronicles-Of-The-Exile")
-        print(f"Error: Could not find {target_filename} in {valheim_root_cfg}")
+        content_root_cfg = CONFIG["archive"].get("content_root", "010-Valheim/Chronicles-Of-The-Exile")
+        print(f"Error: Could not find {target_filename} in {content_root_cfg}")
         sys.exit(1)
 
     transcript_data = load_transcript_asset(str(file_info['path']))
@@ -155,7 +157,7 @@ def prepare_session_assets(season: str, episode: str) -> SessionData:
         target_filename=target_filename,
         path=str(file_info['path']),
         saga=str(file_info['saga']),
-        biome=str(file_info['biome']),
+        arc=str(file_info['arc']),
         transcript=transcript_data,
         lexicon=lexicon_data,
         duration=actual_duration

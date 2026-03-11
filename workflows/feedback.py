@@ -11,8 +11,8 @@ def json_to_audit_markdown(data: dict, session: SessionData) -> str:
     md = f"# 🛡️ CONTENT AUDIT REPORT: {session.full_ep_id}\n\n"
     md += f"* **Total Stream Duration:** {int(session.duration // 60):02d}:{int(session.duration % 60):02d}\n"
     md += f"* **Total Seconds:** {int(session.duration)}\n"
-    md += f"* **Primary Biome:** {session.biome}\n"
-    md += "* **Grandpa Rule Status:** Plain Speech / Helpful Exile Guidance\n\n"
+    md += f"* **Current Arc:** {session.arc}\n"
+    md += "* **Grandpa Rule Status:** Plain Speech / Helpful Guidance\n\n"
     md += "---\n\n"
 
     pa = data.get('production_assistant', {})
@@ -40,11 +40,11 @@ def json_to_audit_markdown(data: dict, session: SessionData) -> str:
     md += "## 🎨 ROLE 2: CREATIVE DIRECTOR (Linguistic & Persona Audit)\n\n"
     md += "### 2.1 LINGUISTIC ALIGNMENT\n"
     md += "* **Lexicon Saturation:**\n"
-    md += f"    * **Saga Terms:** {cd.get('saga_terms_count', 0)}\n"
+    md += f"    * **Arc Terms:** {cd.get('arc_terms_count', 0)}\n"
     md += f"    * **Technical Terms:** {cd.get('technical_terms_count', 0)}\n"
     md += f"    * **Saturation Ratio:** {cd.get('saturation_ratio', '0:0')}\n"
     
-    md += "* **Grandpa Rule Compliance (Plain Speech & Guidance):**\n"
+    md += "* **Brand Voice Compliance (Plain Speech & Guidance):**\n"
     md += f"    * **Helpful Insights:** {cd.get('helpful_insights_count', 0)}\n"
     md += f"    * **Persona Breaks:** {cd.get('persona_breaks_count', 0)}\n"
     
@@ -57,16 +57,16 @@ def json_to_audit_markdown(data: dict, session: SessionData) -> str:
             
     md += "\n### 2.2 PERSONA INTEGRITY\n"
     md += f"* **Modernism Audit:** {', '.join(cd.get('modernism_audit', []))}\n"
-    md += f"* **Grandpa Wisdom:** {cd.get('grandpa_wisdom_count', 0)}\n"
+    md += f"* **Brand Wisdom:** {cd.get('brand_wisdom_count', 0)}\n"
     md += f"* **Fourth Wall Breaks (Meta-Speech):** {cd.get('meta_speech_breaks_count', 0)}\n"
     md += "\n---\n\n"
     
     sa = data.get('strategic_analyst', {})
     md += "## ⚔️ ROLE 3: STRATEGIC ANALYST (Performance Audit)\n\n"
     md += "### 3.1 MECHANICAL DISCIPLINE\n"
-    md += "* **Shieldmaiden’s Rule (Preparation):**\n"
-    md += f"    * **Rested Uptime:** {sa.get('rested_uptime_percent', 0)}%\n"
-    md += f"    * **Food Uptime:** {sa.get('food_uptime_percent', 0)}%\n"
+    md += "* **Preparation & Resources:**\n"
+    md += f"    * **Preparation Uptime:** {sa.get('preparation_uptime_percent', 0)}%\n"
+    md += f"    * **Resource Uptime:** {sa.get('resource_uptime_percent', 0)}%\n"
     md += f"* **Safety Protocol:** {sa.get('safety_protocol_notes', 'N/A')}\n\n"
     
     md += "### 3.2 PERFORMANCE OUTCOMES\n"
@@ -91,7 +91,7 @@ class FeedbackWorkflow(Workflow):
         prompt = audit_prompt.build_audit_prompt(
             episode_id=session.full_ep_id,
             duration=str(int(session.duration)),
-            biome=session.biome,
+            arc=session.arc,
             lexicon_context=session.lexicon,
             transcript=session.transcript
         )

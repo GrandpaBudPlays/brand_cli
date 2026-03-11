@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     season, episode, operation = parse_cli_args()
     
-    archive_root = CONFIG["archive"].get("valheim_root", "Unknown")
+    archive_root = CONFIG["archive"].get("content_root", "Unknown")
     print(f"--- Loading archive from: {archive_root} ---")
     
     session = prepare_session_assets(season, episode)
