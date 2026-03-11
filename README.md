@@ -18,10 +18,12 @@ A command-line tool designed to assist production teams with their workflow pipe
 
 ## ✨ Features
 
+- **Stateful Context (Zero Fatigue CLI):** Set your current focus (IP, Series, Season) once, and the CLI remembers it via a local hidden file. Run workflow operations seamlessly without constantly retyping long directory paths.
+- **Agnostic Architecture:** Completely decoupled from the content repository. Point it at any Media Asset Management (MAM) archive on your machine using a simple JSON configuration.
+- **Dynamic Terminology Injection:** Map generic MAM terms (IP, Series, Season, Arc, Episode) to your specific brand voice (e.g., "Franchise", "Show", "Saga", "Biome"). The AI automatically adopts your vocabulary in its prompts and output reports.
 - **Tactical Stream Audits:** Evaluates transcripts for pacing, filler words, and brand voice adherence (e.g., plain speech, guidance rules).
 - **Strategic Gold Extraction:** Automatically identifies and timestamps moments for Shorts (Type A), Clips (Type B), Narrative/Action Montages (Type C), and strict YouTube Chapters.
 - **Automated YouTube Drafting:** A multi-pass pipeline that generates complete "Triple-Threat" YouTube descriptions (Hook, Lore, Chronicle) and automatically injects SEO keywords.
-- **Agnostic Architecture:** Completely decoupled from the content repository. Point it at any Media Asset Management (MAM) archive on your machine using a simple JSON configuration.
 - **Built-in Cost & Token Tracking:** Monitors API usage and prevents token-limit crashes by utilizing robust Gemini API wrappers.
 
 ---
@@ -55,21 +57,31 @@ echo "GEMINIAPIKEY=your_actual_api_key_here" > .env
 
 ## ⚙️ Configuration
 
-Brand-CLI uses a modern JSON configuration structure built around standard Media Asset Management (MAM) terms. By default, it looks for `brand_config.json` in the current working directory, or you can specify a path using the `BRAND_CONFIG_PATH` environment variable.
+Brand-CLI uses a modern JSON configuration structure built around the standard Media Asset Management (MAM) hierarchy (IP > Series > Season > Episode). By default, it looks for `brand_config.json` in the current working directory, or you can specify a path using the `BRAND_CONFIG_PATH` environment variable.
 
-Create a `brand_config.json` file to point the CLI to your specific content archive:
+Create a `brand_config.json` file to point the CLI to your specific content archive and define your brand terminology:
 
 ```json
 {
     "archive": {
-        "content_root": "/absolute/path/to/your/Content-Archive",
-        "global_lexicon_path": "/absolute/path/to/your/Content-Archive/Global-Lexicon.md",
-        "arc_metadata_file": "Arc.md"
+        "content_root": "/absolute/path/to/your/Content-Archive"
     },
-    "brand": {
-        "default_arcs": {
-            "Season 1": "The Beginning",
-            "Season 2": "The Journey"
+    "ips": {
+        "Valheim": {
+            "terminology": {
+                "ip": "Game",
+                "series": "Chronicles",
+                "season": "Saga",
+                "arc": "Biome"
+            },
+            "series": {
+                "Chronicles": {
+                    "path_relative": "010-Valheim/Chronicles-Of-The-Exile",
+                    "global_lexicon_path": "010-Valheim/Saga-Lexicon-Valheim.md",
+                    "arc_metadata_file": "Biome.md",
+                    "default_arcs": {}
+                }
+            }
         }
     },
     "reports": {
@@ -82,27 +94,40 @@ Create a `brand_config.json` file to point the CLI to your specific content arch
 
 ## 💻 Usage
 
-Run the orchestrator from the terminal using the following syntax:
+Brand-CLI features a **stateful context** so you can work friction-free. 
+
+### 1. Set Your Context
+First, tell the CLI what part of the archive you are working on. This is saved to a local hidden `.brand_context` file.
 
 ```bash
-python Brand.py <Operation> <Season> <Episode> [--continue]
+python Brand.py Context --ip "Valheim" --series "Chronicles" --season "Saga I"
+```
+*(You can clear your active context at any time using `python Brand.py Context --clear`)*
+
+### 2. Run Operations
+Once your context is set, you can execute workflow pipelines using clean, shorthand syntax:
+
+```bash
+python Brand.py Audit E005
 ```
 
-**Example:**
+If you prefer to run it without a saved context, explicitly provide the arguments:
 ```bash
-python Brand.py Audit S01 E005
+python Brand.py Audit "Saga I" E005
 ```
 
 ### Available Operations
 
 | Operation | Description | Output |
 | :--- | :--- | :--- |
+| **`Context`** | Sets or clears the active stateful session (`--ip`, `--series`, `--season`). | `.brand_context` file |
 | **`Audit`** | Runs both `Feedback` and `Gold` operations sequentially. | Both Audit & Gold `.md` and `.json` files. |
 | **`Feedback`** | Generates a tactical audit of the stream (pacing, filler words, brand rules). | `{Ep} Audit.md` |
 | **`Gold`** | Extracts strategic highlights (Shorts, Clips, Montages, Chapters). | `{Ep} Gold.md` |
 | **`Draft`** | 4-Pass pipeline generating YouTube descriptions. Pass 2 requires the `--continue` flag. | `{Ep} Description.md` |
+| **`Describe`**| Placeholder for future describe functionality. | N/A |
 
-*(Note: Every operation outputs clean Markdown (`.md`) reports alongside raw `.json` files for programmatic chaining and debugging, cleanly organized into Episode folders if configured).*
+*(Note: Every operation outputs clean Markdown (`.md`) reports alongside raw `.json` files for programmatic chaining and debugging, neatly organized into Episode folders if configured).*
 
 ---
 
