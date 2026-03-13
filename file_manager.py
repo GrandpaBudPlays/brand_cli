@@ -59,7 +59,7 @@ def get_terminology(ip_data) -> Terminology:
     )
 
 
-def find_transcript_and_metadata(target_filename, user_ip=None, user_series=None):
+def find_transcript_and_metadata(full_ep_id, user_ip=None, user_series=None):
     content_root_cfg = CONFIG["archive"].get("content_root", "/home/bud/dev/Stream-Archive")
     search_path = pathlib.Path(content_root_cfg).resolve()
     
@@ -73,19 +73,29 @@ def find_transcript_and_metadata(target_filename, user_ip=None, user_series=None
         if rel_path:
             search_path = search_path / rel_path
 
-    found_files = list(search_path.rglob(target_filename))
+    processed_files = list(search_path.rglob(f"{full_ep_id}/Transcript.md"))
 
-    if not found_files:
-        return None
+    if processed_files:
+        transcript_path = processed_files[0]
+    else:
+        staged_files = list(search_path.rglob(f"{full_ep_id} Transcript.md"))
         
-    if len(found_files) > 1:
-        print(f"Error: Multiple matches found for {target_filename}.")
-        for f in found_files:
-            print(f" - {f}")
-        print("Please narrow your context using: python Brand.py Context --ip IP_NAME --series SERIES_NAME")
-        sys.exit(1)
+        if not staged_files:
+            return None
+            
+        if len(staged_files) > 1:
+            print(f"Error: Multiple matches found for staging file {full_ep_id} Transcript.md.")
+            for f in staged_files:
+                print(f" - {f}")
+            print("Please narrow your context using: python Brand.py Context --ip IP_NAME --series SERIES_NAME")
+            sys.exit(1)
 
-    transcript_path = found_files[0]
+        old_path = staged_files[0]
+        new_dir = old_path.parent / full_ep_id
+        new_dir.mkdir(parents=True, exist_ok=True)
+        transcript_path = new_dir / "Transcript.md"
+        old_path.rename(transcript_path)
+        print(f"Moved staging transcript to {transcript_path}")
     
     ip_name, series_name, ip_data, series_info = resolve_ip_and_series(transcript_path)
     
@@ -94,8 +104,8 @@ def find_transcript_and_metadata(target_filename, user_ip=None, user_series=None
         series_info = {}
         ip_data = {}
         
-    saga_folder_name = transcript_path.parent.name
-    current_dir = transcript_path.parent
+    saga_folder_name = transcript_path.parent.parent.name
+    current_dir = transcript_path.parent.parent
     arc_name = "Unknown"
     
     metadata_filename = series_info.get("arc_metadata_file", "Arc.md")
@@ -115,7 +125,7 @@ def find_transcript_and_metadata(target_filename, user_ip=None, user_series=None
     return {
         "path": transcript_path,
         "arc": arc_name,
-        "saga": transcript_path.parent.name,
+        "saga": saga_folder_name,
         "ip_data": ip_data,
         "series_info": series_info
     }
@@ -206,16 +216,15 @@ def prepare_session_assets(args) -> SessionData:
             sys.exit(1)
 
     full_ep_id = f"{season} {episode}"
-    target_filename = f"{full_ep_id} Transcript.md"
 
-    file_info = find_transcript_and_metadata(target_filename, args.ip, args.series)
+    file_info = find_transcript_and_metadata(full_ep_id, args.ip, args.series)
     if not file_info:
-        print(f"Error: Could not find {target_filename} in the configured archive paths.")
+        print(f"Error: Could not find '{full_ep_id} Transcript.md' or '{full_ep_id}/Transcript.md' in the configured archive paths.")
         sys.exit(1)
 
     transcript_data = load_transcript_asset(str(file_info['path']))
     if not transcript_data:
-        print(f"Skipping {target_filename}: No Audio detected.")
+        print(f"Skipping {full_ep_id}: No Audio detected.")
         sys.exit(0)
 
     lexicon_data = resolve_lexicon_data(episode, file_info["series_info"])
@@ -227,7 +236,7 @@ def prepare_session_assets(args) -> SessionData:
         season=season,
         episode=episode,
         full_ep_id=full_ep_id,
-        target_filename=target_filename,
+        target_filename="Transcript.md",
         path=str(file_info['path']),
         saga=str(file_info['saga']),
         arc=str(file_info['arc']),
@@ -240,21 +249,15 @@ def prepare_session_assets(args) -> SessionData:
 
 def save_audit_report(transcript_path: str, content: str, report_type: str, model_suffix: str | None = None, extension: str = ".md"):
     parent_dir = os.path.dirname(transcript_path)
-    base_name = os.path.basename(transcript_path).replace(" Transcript.md", "")
-    
-    if CONFIG["reports"].get("group_by_episode", True):
-        report_dir = os.path.join(parent_dir, "Reports", base_name)
-    else:
-        report_dir = os.path.join(parent_dir, "Reports")
 
-    if not os.path.exists(report_dir):
-        os.makedirs(report_dir)
+    if not os.path.exists(parent_dir):
+        os.makedirs(parent_dir)
 
     if model_suffix:
-        filename = f"{base_name} {report_type} - {model_suffix}{extension}"
+        filename = f"{report_type} - {model_suffix}{extension}"
     else:
-        filename = f"{base_name} {report_type}{extension}"
-    save_path = os.path.join(report_dir, filename)
+        filename = f"{report_type}{extension}"
+    save_path = os.path.join(parent_dir, filename)
 
     with open(save_path, 'w', encoding='utf-8') as f:
         f.write(content)
