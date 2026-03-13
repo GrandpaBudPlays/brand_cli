@@ -3,6 +3,7 @@ import json
 from typing import cast
 from ai.gemini import GeminiModel
 from file_manager import SessionData, save_audit_report, read_file
+from config import CONFIG
 from prompts.draft import DraftExtractionPrompt, DraftCreativePrompt, DraftSEOPrompt
 from workflows.base import Workflow
 
@@ -14,9 +15,13 @@ class DraftWorkflow(Workflow):
         
         # Paths
         base_dir = os.path.dirname(session.path)
-        reports_dir = os.path.join(base_dir, "Reports")
         base_name = os.path.basename(session.path).replace(" Transcript.md", "")
         
+        if CONFIG.get("reports", {}).get("group_by_episode", True):
+            reports_dir = os.path.join(base_dir, "Reports", base_name)
+        else:
+            reports_dir = os.path.join(base_dir, "Reports")
+            
         extraction_json_path = os.path.join(reports_dir, f"{base_name} Extraction.json")
         hints_path = os.path.join(base_dir, "hints.txt")
         seo_path = os.path.join(base_dir, "seo.txt")

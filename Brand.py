@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     # The parse_cli_args now handles the 'Context' operation directly and exits if so.
     args = parse_cli_args()
-    operation = args.operation.capitalize()
+    operation = args.operation
     
     archive_root = CONFIG["archive"].get("content_root", "Unknown")
     

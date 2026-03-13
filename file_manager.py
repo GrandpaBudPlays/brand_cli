@@ -295,7 +295,7 @@ def handle_context_command(args):
 
 def parse_cli_args():
     parser = argparse.ArgumentParser(description="Brand-CLI AI Orchestrator")
-    parser.add_argument("operation", type=str, choices=["Audit", "Feedback", "Gold", "Describe", "Draft", "Context"], 
+    parser.add_argument("operation", type=str.capitalize, choices=["Audit", "Feedback", "Gold", "Describe", "Draft", "Context"], 
                         help="The operation to execute.")
     parser.add_argument("args", nargs="*", help="[Season] Episode (e.g., S01 E005 or just E005). Not required for Context.")
     
