@@ -31,3 +31,9 @@ Because "Season" or "Arc" doesn't fit every creator's brand, the AI prompts are 
 * **The Dictionary:** `brand_config.json` allows users to map generic MAM terms to their specific brand voice (e.g., `{"arc": "Biome", "season": "Saga"}`).
 * **Prompt Engineering:** AI Prompts (like `audit.py`) must use variables like `{arc_term}` and `{arc}` rather than hardcoding words like "Biome".
 * **Output:** The AI generates Markdown reports using the custom terminology, ensuring the final output perfectly matches the creator's brand voice.
+
+## 5. Inbox to Bundled Episode Architecture
+The system acts as a pipeline orchestrator that actively manages your raw file states.
+* **The Staging Inbox:** Raw files exported from video software or transcript tools are initially dropped as flat files (e.g., `S01 E01 Transcript.md`). This indicates they are "unprocessed".
+* **Auto-Migration:** Upon running any workflow (e.g., `Audit`), the `file_manager` locates the flat transcript and automatically migrates it into a "Bundled" directory structure (e.g., `S01 E01/Transcript.md`).
+* **Clean Artifacts:** Once bundled, all AI-generated reports (`Audit.md`, `Gold.md`, `Draft.json`) are written directly to this new episode folder without redundant episode prefixes in their filenames.

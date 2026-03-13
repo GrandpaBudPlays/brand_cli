@@ -122,12 +122,12 @@ python Brand.py Audit "Saga I" E005
 | :--- | :--- | :--- |
 | **`Context`** | Sets or clears the active stateful session (`--ip`, `--series`, `--season`). | `.brand_context` file |
 | **`Audit`** | Runs both `Feedback` and `Gold` operations sequentially. | Both Audit & Gold `.md` and `.json` files. |
-| **`Feedback`** | Generates a tactical audit of the stream (pacing, filler words, brand rules). | `{Ep} Audit.md` |
-| **`Gold`** | Extracts strategic highlights (Shorts, Clips, Montages, Chapters). | `{Ep} Gold.md` |
-| **`Draft`** | 4-Pass pipeline generating YouTube descriptions. Pass 2 requires the `--continue` flag. | `{Ep} Description.md` |
+| **`Feedback`** | Generates a tactical audit of the stream (pacing, filler words, brand rules). | `Audit.md` |
+| **`Gold`** | Extracts strategic highlights (Shorts, Clips, Montages, Chapters). | `Gold.md` |
+| **`Draft`** | 4-Pass pipeline generating YouTube descriptions. Pass 2 requires the `--continue` flag. | `Description.md` |
 | **`Describe`**| Placeholder for future describe functionality. | N/A |
 
-*(Note: Every operation outputs clean Markdown (`.md`) reports alongside raw `.json` files for programmatic chaining and debugging, neatly organized into Episode folders if configured).*
+*(Note: Every operation outputs clean Markdown (`.md`) reports alongside raw `.json` files for programmatic chaining and debugging. The system acts as an auto-organizer: processing an episode automatically migrates its raw transcript into a dedicated episode folder where all generated reports are saved).* 
 
 ---
 
