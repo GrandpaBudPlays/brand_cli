@@ -64,8 +64,7 @@ You must return a raw JSON object matching this structure:
   }}
 }}
 
-TRANSCRIPT:
-{transcript}""",
+""",
             temperature=0.1,
             temperature_overrides={
                 'gemini-3-flash-preview': 0.1,
@@ -80,7 +79,6 @@ TRANSCRIPT:
         duration: str,
         arc: str,
         lexicon_context: str,
-        transcript: str,
         arc_term: str = "Arc"
     ) -> str:
         return self.build_prompt(
@@ -88,6 +86,5 @@ TRANSCRIPT:
             duration=duration,
             arc=arc,
             lexicon_context=lexicon_context if lexicon_context else "N/A for early episodes",
-            transcript=transcript,
             arc_term=arc_term
         )

@@ -25,7 +25,7 @@ TRANSCRIPT:
         )
     def build_extraction_prompt(self, transcript: str, hints: str = "") -> str:
         hints_text = f"USER HINTS (Prioritize these events):\n{hints}\n" if hints else ""
-        return self.build_prompt(transcript=transcript, hints_text=hints_text)
+        return self.build_prompt(hints_text=hints_text)
 
 class DraftCreativePrompt(BasePrompt):
     """Pass 2: The Triple-Threat Creative Draft."""

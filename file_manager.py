@@ -4,6 +4,7 @@ import pathlib
 import re
 import sys
 from dataclasses import dataclass
+from typing import Any, Optional
 
 from config import CONFIG, CONTEXT, save_context
 
@@ -16,6 +17,7 @@ class Terminology:
     arc: str = "Arc"
 
 @dataclass
+
 class SessionData:
     season: str
     episode: str
@@ -28,6 +30,7 @@ class SessionData:
     lexicon: str
     duration: float
     terms: Terminology
+    uploaded_file: Optional[Any] = None
 
 
 def resolve_ip_and_series(path: pathlib.Path):

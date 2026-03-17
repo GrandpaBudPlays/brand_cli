@@ -94,7 +94,6 @@ class FeedbackWorkflow(Workflow):
             duration=str(int(session.duration)),
             arc=session.arc,
             lexicon_context=session.lexicon,
-            transcript=session.transcript,
             arc_term=session.terms.arc
         )
         
@@ -103,7 +102,8 @@ class FeedbackWorkflow(Workflow):
             prompt,
             system_instruction=audit_prompt.get_system_instruction(),
             temperature=temperature,
-            response_mime_type="application/json"
+            response_mime_type="application/json",
+            file_obj=session.uploaded_file
         )
         
         if not result.success:

@@ -31,13 +31,23 @@ class DraftWorkflow(Workflow):
             if hints:
                 print(f"Loaded hints from {hints_path}")
                 
-            prompt = extraction_prompt.build_extraction_prompt(session.transcript, hints)
-            result = model.generate(
-                prompt,
-                system_instruction=extraction_prompt.get_system_instruction(),
-                temperature=extraction_prompt.config.temperature,
-                response_mime_type="application/json"
-            )
+            prompt = extraction_prompt.build_extraction_prompt(hints)
+            
+            file_obj = None
+            try:
+                # Upload transcript via File API
+                file_obj = model.upload_file(session.path, display_name=f"Transcript_{session.full_ep_id}")
+                
+                result = model.generate(
+                    prompt,
+                    system_instruction=extraction_prompt.get_system_instruction(),
+                    temperature=extraction_prompt.config.temperature,
+                    response_mime_type="application/json",
+                    file_obj=file_obj
+                )
+            finally:
+                if file_obj:
+                    model.delete_file(file_obj.name)
             
             if not result.success:
                 raise RuntimeError(f"Pass 1 Failed: {result.error}")

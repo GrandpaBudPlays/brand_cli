@@ -2,6 +2,7 @@ import os
 import time
 import logging
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception, before_sleep_log
+from typing import Any, Optional
 from google import genai
 from google.genai import types
 from google.genai import errors
@@ -45,7 +46,7 @@ class GeminiModel(BaseAIModel):
     def name(self) -> str:
         return self._model_name
 
-    def generate(self, prompt: str, system_instruction: str = "", temperature: float = 0.1, response_mime_type: str = "text/plain", response_schema: dict | None = None) -> ModelResult:
+    def generate(self, prompt: str, system_instruction: str = "", temperature: float = 0.1, response_mime_type: str = "text/plain", response_schema: dict | None = None, file_obj: Optional[Any] = None) -> ModelResult:
         config = types.GenerateContentConfig(
             system_instruction=system_instruction,
             temperature=temperature,
@@ -55,7 +56,11 @@ class GeminiModel(BaseAIModel):
             config.response_schema = response_schema
             
         config = self._ensure_timeout_config(config)
-        return self._generate_with_retry(config, prompt)
+        if file_obj:
+            contents = [file_obj, prompt]
+        else:
+            contents = prompt
+        return self._generate_with_retry(config, contents)
 
     def _ensure_timeout_config(self, config: types.GenerateContentConfig) -> types.GenerateContentConfig:
         current_options = getattr(config, 'http_options', None)
@@ -92,7 +97,7 @@ class GeminiModel(BaseAIModel):
                     return float(detail.retry_delay.rstrip('s'))
         return None
 
-    def _generate_with_retry(self, config: types.GenerateContentConfig, contents: str) -> ModelResult:
+    def _generate_with_retry(self, config: types.GenerateContentConfig, contents: Any) -> ModelResult:
         
         @retry(
             stop=stop_after_attempt(3),
@@ -150,3 +155,28 @@ class GeminiModel(BaseAIModel):
             cost=cost,
             fallback_used=fallback_used
         )
+
+
+    def upload_file(self, file_path: str, display_name: str | None = None) -> Any:
+        """Uploads a file to the Gemini API and returns the file object."""
+        logger.info(f"Uploading file to Gemini API: {file_path}")
+        config = types.UploadFileConfig(display_name=display_name) if display_name else None
+        
+        # Note: Google GenAI SDK sets an automatic 48-hour expiration time for uploaded files.
+        # There is no native TTL override parameter in UploadFileConfig, so we rely on the 48-hour default
+        # and our own manual cleanup routines.
+        uploaded_file = self._client.files.upload(
+            file=file_path,
+            config=config
+        )
+        logger.info(f"Upload complete. URI: {uploaded_file.uri}")
+        return uploaded_file
+
+    def delete_file(self, file_name: str) -> None:
+        """Deletes a file from the Gemini API."""
+        try:
+            logger.info(f"Deleting remote file: {file_name}")
+            self._client.files.delete(name=file_name)
+            logger.info("File deleted successfully.")
+        except Exception as e:
+            logger.error(f"Failed to delete remote file {file_name}: {e}")

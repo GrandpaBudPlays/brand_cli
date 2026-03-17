@@ -48,14 +48,15 @@ class GoldWorkflow(Workflow):
         prompts = get_prompt_library("valheim")
         gold_prompt: GoldExtractionPrompt = cast(GoldExtractionPrompt, prompts.get("gold_extraction"))
         
-        prompt = gold_prompt.build_gold_prompt(transcript=session.transcript, duration_sec=session.duration)
+        prompt = gold_prompt.build_gold_prompt(duration_sec=session.duration)
         
         temperature = gold_prompt.get_temperature(model.name)
         result = model.generate(
             prompt,
             system_instruction=gold_prompt.get_system_instruction(),
             temperature=temperature,
-            response_mime_type="application/json"
+            response_mime_type="application/json",
+            file_obj=session.uploaded_file
         )
         
         if not result.success:

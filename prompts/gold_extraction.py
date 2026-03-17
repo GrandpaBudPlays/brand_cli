@@ -50,8 +50,7 @@ You must return a raw JSON object matching this structure:
   ]
 }}
 
-TRANSCRIPT:
-{transcript}""",
+""",
             temperature=0.1,
             temperature_overrides={
                 'gemini-3-flash-preview': 0.2,
@@ -63,11 +62,9 @@ TRANSCRIPT:
     
     def build_gold_prompt(
         self,
-        transcript: str,
         duration_sec: float
     ) -> str:
         pacing = "High-density" if duration_sec < 1200 else "Strategic milestones"
         return self.build_prompt(
-            transcript=transcript,
             pacing=pacing
         )
