@@ -37,6 +37,8 @@ venv.bak/
 
 # Configuration files
 brand_config.json
+opencode.json
+
 
 # IDEs
 .vscode/
