@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brand_cli"
+version = "0.1.0"
+authors = [
+  { name="Bud Wheeler", email="GrandBudPlays@gmail.com" },
+]
+description = "A polymorphic text assembly engine and AI-powered media review workflow."
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "google-genai==1.66.0",
+    "openai==2.26.0",
+    "python-dotenv==1.2.2",
+    "tenacity==9.1.4",
+]
+
+[project.scripts]
+brand-cli = "brand_cli.Brand:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
