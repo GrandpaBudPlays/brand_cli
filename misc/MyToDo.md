@@ -34,3 +34,28 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
 4. **Philosophy:**
    - Agnostic & Decoupled: The engine doesn't care if the content is Valheim or Tech Tutorials.
    - Zero Fatigue: Automatic path resolution based on `.brand_context`.
+
+### Implementation Notes
+
+## Recursion Safety
+- Implement max recursion depth (10 levels) for CompositeFragment
+- Add cycle detection in fragment references
+
+## Performance Optimizations
+- Add LRU cache for resolved fragment paths
+- Implement bulk fragment pre-loading for workflows
+
+## Error Handling Standardization
+- Use format: "[FRAGMENT_ERROR] {fragment_type}@{path}: {reason}"
+- Document all error cases in FragmentError.md
+
+## Flagged Fragment Tags
+- Standardize tag format: "[TAG:NAME]"
+- Add reserved tags list (TBD)
+
+## Metadata Headers
+- Implement YAML front matter for:
+  - Fragment version
+  - Last modified
+  - Author
+  - Dependencies

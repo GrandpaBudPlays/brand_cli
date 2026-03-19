@@ -21,6 +21,11 @@ A command-line tool designed to assist production teams with their workflow pipe
 - **Stateful Context (Zero Fatigue CLI):** Set your current focus (IP, Series, Season) once, and the CLI remembers it via a local hidden file. Run workflow operations seamlessly without constantly retyping long directory paths.
 - **Agnostic Architecture:** Completely decoupled from the content repository. Point it at any Media Asset Management (MAM) archive on your machine using a simple JSON configuration.
 - **Dynamic Terminology Injection:** Map generic MAM terms (IP, Series, Season, Arc, Episode) to your specific brand voice (e.g., "Franchise", "Show", "Saga", "Biome"). The AI automatically adopts your vocabulary in its prompts and output reports.
+- **Polymorphic Fragment Engine:** Hierarchical text assembly system with:
+  - Static fragments (exact file content)
+  - Random fragments (random blocks from delimited files)
+  - Flagged fragments (tagged sections with [TAG:NAME] syntax)
+  - Composite fragments (recursive chaining with cycle detection)
 - **Tactical Stream Audits:** Evaluates transcripts for pacing, filler words, and brand voice adherence (e.g., plain speech, guidance rules).
 - **Strategic Gold Extraction:** Automatically identifies and timestamps moments for Shorts (Type A), Clips (Type B), Narrative/Action Montages (Type C), and strict YouTube Chapters.
 - **Automated YouTube Drafting:** A multi-pass pipeline that generates complete "Triple-Threat" YouTube descriptions (Hook, Lore, Chronicle) and automatically injects SEO keywords.
@@ -140,6 +145,12 @@ Brand-CLI/
 ├── file_manager.py         # Agnostic file I/O & path resolution
 ├── requirements.txt        # Python dependencies
 ├── ai/                     # Gemini SDK wrappers, runners, & cost tracking
+├── fragments/              # Polymorphic text assembly engine
+│   ├── base.py             # Fragment ABC
+│   ├── static.py           # Exact file content
+│   ├── random.py           # Random block selection
+│   ├── flagged.py          # Tagged section retrieval
+│   └── composite.py        # Recursive fragment chaining
 ├── prompts/                # AI system instructions and templating engine
 └── workflows/              # Business logic for Audit, Feedback, Gold, & Draft
 ```
