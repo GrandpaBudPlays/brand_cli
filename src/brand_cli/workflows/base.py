@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ai.gemini import GeminiModel
-    from file_manager import SessionData
+    from brand_cli.ai.gemini import GeminiModel
+    from brand_cli.file_manager import SessionData
 
 
 class Workflow(ABC):

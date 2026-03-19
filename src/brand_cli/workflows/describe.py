@@ -1,6 +1,6 @@
-from ai.gemini import GeminiModel
-from file_manager import SessionData
-from workflows.base import Workflow
+from brand_cli.ai.gemini import GeminiModel
+from brand_cli.file_manager import SessionData
+from brand_cli.workflows.base import Workflow
 
 
 class DescribeWorkflow(Workflow):

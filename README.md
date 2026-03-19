@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎬 Brand-CLI
+# 🎬 brand_cli
 **The AI-Powered Content Pipeline Orchestrator**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -41,8 +41,8 @@ A command-line tool designed to assist production teams with their workflow pipe
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/GrandpaBud/Brand-CLI.git
-cd Brand-CLI
+git clone https://github.com/GrandpaBud/brand_cli.git
+cd brand_cli
 ```
 
 ### 3. Setup Virtual Environment & Install Dependencies
@@ -62,7 +62,7 @@ echo "GEMINIAPIKEY=your_actual_api_key_here" > .env
 
 ## ⚙️ Configuration
 
-Brand-CLI uses a modern JSON configuration structure built around the standard Media Asset Management (MAM) hierarchy (IP > Series > Season > Episode). By default, it looks for `brand_config.json` in the current working directory, or you can specify a path using the `BRAND_CONFIG_PATH` environment variable.
+brand_cli uses a modern JSON configuration structure built around the standard Media Asset Management (MAM) hierarchy (IP > Series > Season > Episode). By default, it looks for `brand_config.json` in the current working directory, or you can specify a path using the `BRAND_CONFIG_PATH` environment variable.
 
 Create a `brand_config.json` file to point the CLI to your specific content archive and define your brand terminology:
 
@@ -99,7 +99,7 @@ Create a `brand_config.json` file to point the CLI to your specific content arch
 
 ## 💻 Usage
 
-Brand-CLI features a **stateful context** so you can work friction-free. 
+brand_cli features a **stateful context** so you can work friction-free. 
 
 ### 1. Set Your Context
 First, tell the CLI what part of the archive you are working on. This is saved to a local hidden `.brand_context` file.
@@ -139,20 +139,24 @@ python Brand.py Audit "Saga I" E005
 ## 📂 Project Structure
 
 ```text
-Brand-CLI/
-├── Brand.py                # Main entry point / CLI router
-├── config.py               # JSON configuration manager
-├── file_manager.py         # Agnostic file I/O & path resolution
-├── requirements.txt        # Python dependencies
-├── ai/                     # Gemini SDK wrappers, runners, & cost tracking
-├── fragments/              # Polymorphic text assembly engine
-│   ├── base.py             # Fragment ABC
-│   ├── static.py           # Exact file content
-│   ├── random.py           # Random block selection
-│   ├── flagged.py          # Tagged section retrieval
-│   └── composite.py        # Recursive fragment chaining
-├── prompts/                # AI system instructions and templating engine
-└── workflows/              # Business logic for Audit, Feedback, Gold, & Draft
+brand_cli/
+├── pyproject.toml             # Project configuration and entry points
+├── .env                       # API keys (Gemini/OpenAI) - DO NOT COMMIT
+├── .brand_context             # Stateful context for the assembly engine
+├── src/
+│   └── brand_cli/             # Main package directory
+│       ├── Brand.py           # Application entry point (main loop)
+│       ├── config.py          # Configuration and Context loaders
+│       ├── file_manager.py    # Workspace and file I/O logic
+│       ├── ai/                # AI model adapters (Gemini, OpenAI, Azure)
+│       ├── fragments/         # Polymorphic text components
+│       ├── prompts/           # System instructions and templates
+│       └── workflows/         # Business logic for Audit, Draft, etc.
+├── docs/
+│   └── brand_cli.md           # Technical documentation
+├── misc/                      # Scripts and experimental tests
+├── venv/                      # Virtual environment (local only)
+└── README.md                  # Project overview
 ```
 
 ---

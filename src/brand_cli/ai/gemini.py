@@ -8,13 +8,13 @@ from google.genai import types
 from google.genai import errors
 from google.genai.errors import ClientError
 
-from ai.base import BaseAIModel, ModelResult
+from brand_cli.ai.base import BaseAIModel, ModelResult
 
 # Configure basic logging if it hasn't been set up yet in the app
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
-def _is_retryable_error(e: Exception) -> bool:
+def _is_retryable_error(e: BaseException) -> bool:
     """Return True if the error is a transient network or 503 error."""
     if getattr(e, 'code', None) == 503:
         return True
@@ -38,6 +38,9 @@ class GeminiModel(BaseAIModel):
             self._client = client
         else:
             api_key = api_key or os.getenv('GEMINIAPIKEY')
+            if not api_key:
+                logger.error("GEMINIAPIKEY environment variable not set")
+                raise ValueError("Gemini API key is required - set GEMINIAPIKEY environment variable")
             self._client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=self.DEFAULT_TIMEOUT))
         self._model_name = model_name or self.DEFAULT_MODEL
         self._backup_model = backup_model or self.DEFAULT_BACKUP
@@ -148,7 +151,7 @@ class GeminiModel(BaseAIModel):
         input_tokens, output_tokens, cost = self._calculate_cost(response, current_model)
         return ModelResult(
             model_name=current_model,
-            content=response.text,
+            content=str(response.text),
             success=True,
             input_tokens=input_tokens,
             output_tokens=output_tokens,

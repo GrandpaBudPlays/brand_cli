@@ -1,10 +1,10 @@
 import json
 from typing import cast
-from ai.gemini import GeminiModel
-from file_manager import SessionData, save_audit_report
-from prompts import get_prompt_library
-from prompts.gold_extraction import GoldExtractionPrompt
-from workflows.base import Workflow
+from brand_cli.ai.gemini import GeminiModel
+from brand_cli.file_manager import SessionData, save_audit_report
+from brand_cli.prompts import get_prompt_library
+from brand_cli.prompts.gold_extraction import GoldExtractionPrompt
+from brand_cli.workflows.base import Workflow
 
 
 def json_to_gold_markdown(data: dict, session: SessionData) -> str:

@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Optional
-from .base import Fragment
+from brand_cli.fragments.base import Fragment
 
 class StaticFragment(Fragment):
     """Fragment that returns exact file content"""

@@ -1,7 +1,7 @@
 import os
 from openai import AzureOpenAI
 
-from ai.base import BaseAIModel, ModelResult
+from brand_cli.ai.base import BaseAIModel, ModelResult
 
 
 class AzureOpenAIModel(BaseAIModel):

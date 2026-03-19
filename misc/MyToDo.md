@@ -1,17 +1,11 @@
-### ⚠️ Brand-CLI Architectural Risks & Considerations
+# TODO List
+ ## convert draft to use the Random Fragment
+ ## Add ability to view the current context
+ ## Add ability to list available context settings (read the directory structure)
+ ## Modify Help to use defined terms for IP, Series, Season, Episode
+ ## Modify AI class to use user defined API key env variable
 
-* **Context Ambiguity (Section 3):** * *Risk:* Full-archive crawls on context-less commands (e.g., `Audit E001`) may lead to performance lag or "False Positive" collisions across different IPs.
-    * *Mitigation:* Implement a "Did you mean?" fuzzy search or a LRU (Least Recently Used) cache for the `.brand_context`.
 
-* **Atomic Migration Failures (Section 5):**
-    * *Risk:* Interruptions during "Inbox to Bundle" auto-migration could result in "Partial Bundles" (e.g., folder created, but files not moved), causing downstream AI analysis to fail or hallucinate.
-    * *Mitigation:* Use transactional file operations or a "Verification Check" before triggering the Audit workflow.
-
-* **Terminology Mapping Overhead (Section 4):**
-    * *Risk:* The "Mental Translation Layer" between generic MAM code terms (`arc`) and brand-specific CLI output (`Biome`) increases debugging complexity and potential mapping nulls in prompt injection.
-    * *Mitigation:* Centralize a `TermMapper` utility to ensure strict validation between `brand_config.json` and AI prompt variables.
-
----
 
 ### 🎯 Project Goal
 Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly for both AI Prompts (prefixes/system instructions) and Final Output (suffixes/boilerplate).
@@ -59,3 +53,17 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
   - Last modified
   - Author
   - Dependencies
+
+
+  ### ⚠️ Brand-CLI Architectural Risks & Considerations
+
+* **Context Ambiguity (Section 3):** * *Risk:* Full-archive crawls on context-less commands (e.g., `Audit E001`) may lead to performance lag or "False Positive" collisions across different IPs.
+    * *Mitigation:* Implement a "Did you mean?" fuzzy search or a LRU (Least Recently Used) cache for the `.brand_context`.
+
+* **Atomic Migration Failures (Section 5):**
+    * *Risk:* Interruptions during "Inbox to Bundle" auto-migration could result in "Partial Bundles" (e.g., folder created, but files not moved), causing downstream AI analysis to fail or hallucinate.
+    * *Mitigation:* Use transactional file operations or a "Verification Check" before triggering the Audit workflow.
+
+* **Terminology Mapping Overhead (Section 4):**
+    * *Risk:* The "Mental Translation Layer" between generic MAM code terms (`arc`) and brand-specific CLI output (`Biome`) increases debugging complexity and potential mapping nulls in prompt injection.
+    * *Mitigation:* Centralize a `TermMapper` utility to ensure strict validation between `brand_config.json` and AI prompt variables.

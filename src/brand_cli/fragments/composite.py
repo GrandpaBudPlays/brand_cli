@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import List
-from .base import Fragment
+from brand_cli.fragments.base import Fragment
 
 class CompositeFragment(Fragment):
     """Fragment that chains multiple fragments recursively"""

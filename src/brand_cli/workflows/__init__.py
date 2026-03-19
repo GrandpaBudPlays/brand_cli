@@ -1,9 +1,9 @@
-from workflows.base import Workflow
-from workflows.feedback import FeedbackWorkflow
-from workflows.gold import GoldWorkflow
-from workflows.audit import AuditWorkflow
-from workflows.describe import DescribeWorkflow
-from workflows.draft import DraftWorkflow
+from brand_cli.workflows.base import Workflow
+from brand_cli.workflows.feedback import FeedbackWorkflow
+from brand_cli.workflows.gold import GoldWorkflow
+from brand_cli.workflows.audit import AuditWorkflow
+from brand_cli.workflows.describe import DescribeWorkflow
+from brand_cli.workflows.draft import DraftWorkflow
 
 WORKFLOWS = {
     "Feedback": FeedbackWorkflow,

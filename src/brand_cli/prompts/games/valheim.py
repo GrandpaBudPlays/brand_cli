@@ -1,6 +1,6 @@
-from prompts.base import PromptLibrary
-from prompts.audit import AuditPrompt
-from prompts.gold_extraction import GoldExtractionPrompt
+from brand_cli.prompts.base import PromptLibrary
+from brand_cli.prompts.audit import AuditPrompt
+from brand_cli.prompts.gold_extraction import GoldExtractionPrompt
 
 
 class ValheimPromptLibrary(PromptLibrary):

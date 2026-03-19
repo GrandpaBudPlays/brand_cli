@@ -1,6 +1,6 @@
 from pathlib import Path
 import re
-from .base import Fragment
+from brand_cli.fragments.base import Fragment
 from typing import Dict
 
 class FlaggedFragment(Fragment):

@@ -1,7 +1,6 @@
-from .base import Fragment
-from .static import StaticFragment
-from .random import RandomFragment
-from .flagged import FlaggedFragment
-from .composite import CompositeFragment
+from brand_cli.fragments.base import Fragment
+from brand_cli.fragments.random import RandomFragment
+from brand_cli.fragments.flagged import FlaggedFragment
+from brand_cli.fragments.composite import CompositeFragment
 
 __all__ = ['Fragment', 'StaticFragment', 'RandomFragment', 'FlaggedFragment', 'CompositeFragment']

@@ -1,11 +1,11 @@
 import os
 import json
 from typing import cast
-from ai.gemini import GeminiModel
-from file_manager import SessionData, save_audit_report, read_file
-from config import CONFIG
-from prompts.draft import DraftExtractionPrompt, DraftCreativePrompt, DraftSEOPrompt
-from workflows.base import Workflow
+from brand_cli.ai.gemini import GeminiModel
+from brand_cli.file_manager import SessionData, save_audit_report, read_file
+from brand_cli.config import CONFIG
+from brand_cli.prompts.draft import DraftExtractionPrompt, DraftCreativePrompt, DraftSEOPrompt
+from brand_cli.workflows.base import Workflow
 
 class DraftWorkflow(Workflow):
     """The 4-pass Description Draft Pipeline."""

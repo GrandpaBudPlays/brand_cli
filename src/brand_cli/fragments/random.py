@@ -1,6 +1,6 @@
 from pathlib import Path
 import random
-from .base import Fragment
+from brand_cli.fragments.base import Fragment
 
 class RandomFragment(Fragment):
     """Fragment that returns a random block from delimited file"""

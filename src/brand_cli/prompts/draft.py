@@ -1,4 +1,4 @@
-from prompts.base import BasePrompt, PromptConfig
+from brand_cli.prompts.base import BasePrompt, PromptConfig
 
 class DraftExtractionPrompt(BasePrompt):
     """Pass 1: Extract factual events for the narrative description."""

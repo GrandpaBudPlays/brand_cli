@@ -1,6 +1,6 @@
 from typing import Callable, List, Optional
 
-from ai.base import BaseAIModel, ModelResult
+from brand_cli.ai.base import BaseAIModel, ModelResult
 
 
 class ModelRunner:

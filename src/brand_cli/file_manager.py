@@ -6,7 +6,7 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from config import CONFIG, CONTEXT, save_context
+from brand_cli.config import CONFIG, CONTEXT, save_context
 
 
 @dataclass

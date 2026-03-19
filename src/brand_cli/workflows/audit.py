@@ -1,8 +1,8 @@
-from ai.gemini import GeminiModel
-from file_manager import SessionData
-from workflows.base import Workflow
-from workflows.feedback import FeedbackWorkflow
-from workflows.gold import GoldWorkflow
+from brand_cli.ai.gemini import GeminiModel
+from brand_cli.file_manager import SessionData
+from brand_cli.workflows.base import Workflow
+from brand_cli.workflows.feedback import FeedbackWorkflow
+from brand_cli.workflows.gold import GoldWorkflow
 
 
 class AuditWorkflow(Workflow):

@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [project.scripts]
-brand-cli = "brand_cli.Brand:main"
+brand = "brand_cli.Brand:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
