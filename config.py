@@ -49,8 +49,14 @@ def load_config():
             config_path = script_dir / "brand_config.json"
 
     if not config_path.exists():
-        print(f"Warning: brand_config.json not found at {config_path}. Using default configuration.")
-        return DEFAULT_CONFIG
+        print(f"Creating default config at {config_path}")
+        try:
+            with open(config_path, "w", encoding="utf-8") as f:
+                json.dump(DEFAULT_CONFIG, f, indent=4)
+            return DEFAULT_CONFIG
+        except Exception as e:
+            print(f"Error creating default config: {e}. Using in-memory default.")
+            return DEFAULT_CONFIG
 
     try:
         with open(config_path, "r", encoding="utf-8") as f:
