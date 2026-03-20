@@ -4,6 +4,8 @@
  ## Add ability to list available context settings (read the directory structure)
  ## Modify Help to use defined terms for IP, Series, Season, Episode
  ## Modify AI class to use user defined API key env variable
+ ## Review README.md, ARCHITECTURE.md, ./docs/brand_cli.md
+ 
 
 
 

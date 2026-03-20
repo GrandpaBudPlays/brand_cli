@@ -105,20 +105,20 @@ brand_cli features a **stateful context** so you can work friction-free.
 First, tell the CLI what part of the archive you are working on. This is saved to a local hidden `.brand_context` file.
 
 ```bash
-python Brand.py Context --ip "Valheim" --series "Chronicles" --season "Saga I"
+brand Context --ip "Valheim" --series "Chronicles" --season "Saga I"
 ```
-*(You can clear your active context at any time using `python Brand.py Context --clear`)*
+*(You can clear your active context at any time using `brand Context --clear`)*
 
 ### 2. Run Operations
 Once your context is set, you can execute workflow pipelines using clean, shorthand syntax:
 
 ```bash
-python Brand.py Audit E005
+brand Audit E005
 ```
 
 If you prefer to run it without a saved context, explicitly provide the arguments:
 ```bash
-python Brand.py Audit "Saga I" E005
+brand Audit "Saga I" E005
 ```
 
 ### Available Operations
