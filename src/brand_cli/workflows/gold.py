@@ -47,6 +47,13 @@ class GoldWorkflow(Workflow):
     
     def execute(self, context: WorkflowContext, model: GeminiModel) -> None:
         print("Starting Strategic Gold Extraction...")
+
+        if context.transcript is None:
+            print("No transcript available for gold extraction.")
+            return
+
+        if context.uploaded_file:
+            print(f"Processing uploaded file: {getattr(context.uploaded_file, 'name', 'Unknown')}")
         
         prompts = get_prompt_library("valheim")
         gold_prompt: GoldExtractionPrompt = cast(GoldExtractionPrompt, prompts.get("gold_extraction"))

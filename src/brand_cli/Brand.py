@@ -37,6 +37,12 @@ def main():
     
     try:
         gemini_model = GeminiModel()
+        if session and session.transcript_path:
+            print(f"Uploading transcript to Gemini: {session.transcript_path}")
+            session.uploaded_file = gemini_model.upload_file(
+                file_path=session.transcript_path,
+                display_name=f"Transcript_{session.full_ep_id}"
+            )
         model_runner = ModelRunner()
         print("Client initialized.")
     except ValueError as e:

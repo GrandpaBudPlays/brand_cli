@@ -59,12 +59,16 @@ class GeminiModel(BaseAIModel):
             config.response_schema = response_schema
             
         config = self._ensure_timeout_config(config)
+        
         if file_obj:
+            # Add this trace message
+            logger.info(f"Including file in request: {getattr(file_obj, 'name', 'Unknown')}")
             contents = [file_obj, prompt]
         else:
             contents = prompt
+            
         return self._generate_with_retry(config, contents)
-
+ 
     def _ensure_timeout_config(self, config: types.GenerateContentConfig) -> types.GenerateContentConfig:
         current_options = getattr(config, 'http_options', None)
         if current_options and getattr(current_options, 'timeout', None) is not None:
