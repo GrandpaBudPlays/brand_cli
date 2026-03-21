@@ -5,6 +5,7 @@ import re
 import sys
 from dataclasses import dataclass
 from typing import Any, Optional
+from brand_cli.transcript import Transcript
 
 from brand_cli.config import CONFIG, CONTEXT, save_context
 
@@ -17,16 +18,14 @@ class Terminology:
     arc: str = "Arc"
 
 @dataclass
-
 class SessionData:
     season: str
     episode: str
     full_ep_id: str
     target_filename: str
-    path: str
     saga: str
     arc: str
-    transcript: str
+    transcript_obj: 'Transcript'
     lexicon: str
     duration: float
     terms: Terminology
@@ -206,7 +205,7 @@ def get_video_duration(raw_content: str) -> float:
     return timestamp_to_seconds(final_ts)
 
 
-def prepare_session_assets(args) -> SessionData:
+def prepare_session_assets(args) -> Optional[SessionData]:
     season = args.season or CONTEXT.get("season")
     episode = args.episode
     
@@ -235,19 +234,25 @@ def prepare_session_assets(args) -> SessionData:
     
     terms = get_terminology(file_info["ip_data"])
 
-    return SessionData(
-        season=season,
-        episode=episode,
-        full_ep_id=full_ep_id,
-        target_filename="Transcript.md",
-        path=str(file_info['path']),
-        saga=str(file_info['saga']),
-        arc=str(file_info['arc']),
-        transcript=transcript_data,
-        lexicon=lexicon_data,
-        duration=actual_duration,
-        terms=terms
-    )
+    if not season:
+        raise ValueError("Season must be provided")
+    try:
+        ts_obj = Transcript(local_path=str(file_info['path']), episode_id=full_ep_id)
+        return SessionData(
+            season=season,
+            episode=episode,
+            full_ep_id=full_ep_id,
+            target_filename="Transcript.md",
+            saga=str(file_info['saga']),
+            arc=str(file_info['arc']),
+            transcript_obj=ts_obj,
+            lexicon=lexicon_data,
+            duration=ts_obj.get_video_duration(),
+            terms=terms
+        )
+    except ValueError as e:
+        print(f"Skipping {full_ep_id}: {e}")
+        return None
 
 
 def save_audit_report(transcript_path: str, content: str, report_type: str, model_suffix: str | None = None, extension: str = ".md"):

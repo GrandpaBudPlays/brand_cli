@@ -1,7 +1,8 @@
 import json
 from typing import cast
 from brand_cli.ai.gemini import GeminiModel
-from brand_cli.file_manager import SessionData, save_audit_report
+from brand_cli.file_manager import save_audit_report, SessionData
+from brand_cli.transcript import Transcript
 from brand_cli.prompts import get_prompt_library
 from brand_cli.prompts.gold_extraction import GoldExtractionPrompt
 from brand_cli.workflows.base import Workflow

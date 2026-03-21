@@ -84,14 +84,15 @@ class FeedbackWorkflow(Workflow):
     """Generates the tactical Feedback report."""
     
     def execute(self, session: SessionData, model: GeminiModel) -> None:
-        print("Starting Tactical Feedback...")
+        self._ensure_transcript_ready(session, model)
+        logging.info("[FEEDBACK] Starting for %s", session.full_ep_id)
         
         prompts = get_prompt_library("valheim")
         audit_prompt: AuditPrompt = cast(AuditPrompt, prompts.get("audit"))
         
         prompt = audit_prompt.build_audit_prompt(
             episode_id=session.full_ep_id,
-            duration=str(int(session.duration)),
+            duration=str(int(session.transcript_obj.get_video_duration())),
             arc=session.arc,
             lexicon_context=session.lexicon,
             arc_term=session.terms.arc
@@ -113,12 +114,11 @@ class FeedbackWorkflow(Workflow):
             data = json.loads(result.content)
             markdown_content = json_to_audit_markdown(data, session)
             
-            # Save raw JSON
-            save_audit_report(session.path, json.dumps(data, indent=2), "Audit", f"{result.model_name}-raw", ".json")
-            # Save Human-Readable Markdown
-            save_audit_report(session.path, markdown_content, "Audit", result.model_name)
+            # Save reports
+            save_audit_report(session.transcript_obj.local_path, json.dumps(data, indent=2), "Audit", f"{result.model_name}-raw", ".json")
+            save_audit_report(session.transcript_obj.local_path, markdown_content, "Audit", result.model_name)
         except json.JSONDecodeError as e:
-            print(f"JSON decode failed for Feedback. Falling back to raw text. Error: {e}")
-            save_audit_report(session.path, result.content, "Audit", result.model_name)
+            logging.warning("JSON decode failed for Feedback. Falling back to raw text. Error: %s", e)
+            save_audit_report(session.transcript_obj.local_path, result.content, "Audit", result.model_name)
             
-        print("Feedback Report Complete.")
+        logging.info("[FEEDBACK] Completed for %s", session.full_ep_id)
