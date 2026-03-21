@@ -18,6 +18,7 @@ class WorkflowContext:
     saga: str
     arc: str
     transcript: 'Transcript'
+    transcript_path: str
     lexicon: str
     duration: float
     terms: Terminology

@@ -178,6 +178,7 @@ def prepare_session_assets(args) -> Optional[WorkflowContext]:
             saga=str(file_info['saga']),
             arc=str(file_info['arc']),
             transcript=ts_obj,
+            transcript_path=str(file_info['path']),
             lexicon=resolve_lexicon_data(episode, file_info["series_info"]),
             duration=ts_obj.get_video_duration(),
             terms=get_terminology(file_info["ip_data"])

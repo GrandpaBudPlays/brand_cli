@@ -62,19 +62,11 @@ class GoldWorkflow(Workflow):
             file_obj=context.uploaded_file
         )
         
-        if not result.success:
-            raise RuntimeError(f"Failed to generate strategic gold content: {result.error}")
-        
-        try:
-            data = json.loads(result.content)
-            markdown_content = json_to_gold_markdown(data, context)
-            
-            # Save raw JSON for debugging and automation
-            save_audit_report(context.transcript.local_path, json.dumps(data, indent=2), "Gold", f"{result.model_name}-raw", ".json")
-            # Save human-readable Markdown
-            save_audit_report(context.transcript.local_path, markdown_content, "Gold", result.model_name)
-        except json.JSONDecodeError as e:
-            print(f"JSON decode failed for Gold Extraction. Falling back to raw text. Error: {e}")
-            save_audit_report(context.transcript.local_path, result.content, "Gold", result.model_name)
+        self._process_json_result(
+            result, 
+            context, 
+            report_name="Gold", 
+            formatter_func=json_to_gold_markdown
+        )
             
         print("Gold Extraction Complete.")

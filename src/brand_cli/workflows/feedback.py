@@ -111,18 +111,11 @@ class FeedbackWorkflow(Workflow):
             file_obj=context.uploaded_file
         )
         
-        if not result.success:
-            raise RuntimeError(f"Failed to generate audit content: {result.error}")
-            
-        try:
-            data = json.loads(result.content)
-            markdown_content = json_to_audit_markdown(data, context)
-            
-            # Save reports
-            save_audit_report(context.transcript.local_path, json.dumps(data, indent=2), "Audit", f"{result.model_name}-raw", ".json")
-            save_audit_report(context.transcript.local_path, markdown_content, "Audit", result.model_name)
-        except json.JSONDecodeError as e:
-            logging.warning("JSON decode failed for Feedback. Falling back to raw text. Error: %s", e)
-            save_audit_report(context.transcript.local_path, result.content, "Audit", result.model_name)
+        self._process_json_result(
+            result, 
+            context, 
+            report_name="Feedback", 
+            formatter_func=json_to_audit_markdown
+        )
             
         logging.info("[FEEDBACK] Completed for %s", context.full_ep_id)
