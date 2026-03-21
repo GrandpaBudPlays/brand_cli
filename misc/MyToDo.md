@@ -18,6 +18,7 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
 - Add ability to view the current context
 - Add ability to list available context settings (read the directory structure)
 - Modify AI class to use user defined API key env variable
+
  
 # Priority 4 Changes
 - Modify Help to use defined terms for IP, Series, Season, Episode
@@ -84,3 +85,7 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
 * **Terminology Mapping Overhead (Section 4):**
     * *Risk:* The "Mental Translation Layer" between generic MAM code terms (`arc`) and brand-specific CLI output (`Biome`) increases debugging complexity and potential mapping nulls in prompt injection.
     * *Mitigation:* Centralize a `TermMapper` utility to ensure strict validation between `brand_config.json` and AI prompt variables.
+
+
+
+---
