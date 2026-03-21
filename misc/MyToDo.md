@@ -1,50 +1,26 @@
 # TODO List
- ## convert draft to use the Random Fragment
- ## Add ability to view the current context
- ## Add ability to list available context settings (read the directory structure)
- ## Modify Help to use defined terms for IP, Series, Season, Episode
- ## Modify AI class to use user defined API key env variable
+# Priority One Changes
+- remove Transcript functions from file_manager, change all calls to Transcript.
+- find and remove all hard coded paths from file_manager
  ## Review README.md, ARCHITECTURE.md, ./docs/brand_cli.md
+ ## Change Feedback, ask AI for the list of filler words. Count in python.
+## Split find_transcript_and_metadata into two separate functions, find_transcript and Find Metadata. Change this function to call the two supporting functions.
+## Does SessonData class belong in fileManager?
+## Audit: I recommend adding a final instruction to the agent to delete the misc/ folder leftovers once the src/ integration is verified.
 
-
-
-
-### 🎯 Project Goal
+# Priority 2 Changes
+## 🎯 Project Goal
 Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly for both AI Prompts (prefixes/system instructions) and Final Output (suffixes/boilerplate).
+- convert draft to use the Random Fragment
 
-
-
-# Brand-CLI: Transcript Refactor Roadmap
-
-## Phase 1: The Transcript Foundation
-* Create `src/brand_cli/transcript.py`.
-* Move transcript-specific logic from `file_manager.py` to the new `Transcript` class:
-    * `load_transcript_asset` (Loading/Cleaning)
-    * `_has_no_audio_transcript` (Validation)
-    * `get_video_duration` & `get_last_timestamp` (Metadata Extraction)
-* Implement `ensure_uploaded(model)` method in `Transcript` for Just-In-Time (JIT) 
-  uploads to the Gemini File API.
-
-## Phase 1.5: Data Bridge
-* Update `SessionData` dataclass in `file_manager.py` to replace the `transcript` string 
-  and `path` string with a single `transcript_obj: Transcript` field.
-
-## Phase 2: Injection & Logic Flow
-* Modify `AuditWorkflow` to initialize the `Transcript` object once.
-* Implement cleanup logic (using a `try/finally` block or a Context Manager) 
-  to ensure `model.delete_file()` is called only after all sub-workflows 
-  (Feedback, Gold) are finished.
-
-## Phase 3: Global Integration
-* Update all workflows (`Feedback`, `Gold`, `Describe`, `Draft`) to source 
-  data/IDs from `session.transcript_obj` instead of raw strings.
-* Update `Brand.py` and `prepare_session_assets` to initialize the `Transcript` 
-  object during the initial session setup.
-
-## Phase 4: Optimization (Back Burner)
-* Research long-term persistent File IDs and custom TTL logic in `.brand_context`.
-
-
+# Priority 3 Changes
+## Can we change file_manager.load_transcript_asset to a more generic load_archive_asset
+- Add ability to view the current context
+- Add ability to list available context settings (read the directory structure)
+- Modify AI class to use user defined API key env variable
+ 
+# Priority 4 Changes
+- Modify Help to use defined terms for IP, Series, Season, Episode
 
 
 ### 🏛️ Architectural Decisions
@@ -91,6 +67,10 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
   - Author
   - Dependencies
 
+### Long Term Changes
+#### Phase 4: Optimization (Back Burner)
+* Research long-term persistent File IDs and custom TTL logic in `.brand_context`. Do we want to have the file live in google longer so we can run back tasks at another time?
+
 
   ### ⚠️ Brand-CLI Architectural Risks & Considerations
 
@@ -104,3 +84,4 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
 * **Terminology Mapping Overhead (Section 4):**
     * *Risk:* The "Mental Translation Layer" between generic MAM code terms (`arc`) and brand-specific CLI output (`Biome`) increases debugging complexity and potential mapping nulls in prompt injection.
     * *Mitigation:* Centralize a `TermMapper` utility to ensure strict validation between `brand_config.json` and AI prompt variables.
+
