@@ -1,6 +1,6 @@
 import logging
 from brand_cli.ai.gemini import GeminiModel
-from brand_cli.file_manager import SessionData
+from brand_cli.workflow_context import WorkflowContext
 from brand_cli.workflows.base import Workflow
 from brand_cli.workflows.feedback import FeedbackWorkflow
 from brand_cli.workflows.gold import GoldWorkflow
@@ -9,10 +9,10 @@ from brand_cli.workflows.gold import GoldWorkflow
 class AuditWorkflow(Workflow):
     """Generates both the Feedback and Gold reports."""
     
-    def execute(self, session: SessionData, model: GeminiModel) -> None:
+    def execute(self, context: WorkflowContext, model: GeminiModel) -> None:
         try:
             # Upload transcript once for all sub-workflows
-            session.uploaded_file = session.transcript_obj.ensure_uploaded(model)
+            session.uploaded_file = context.transcript_obj.ensure_uploaded(model)
             logging.info(f"[CLOUD] Parent workflow managing transcript: {session.full_ep_id}")
             
             # Run sub-workflows

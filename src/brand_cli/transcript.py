@@ -6,11 +6,11 @@ from brand_cli.utils import read_file
 
 
 class Transcript:
-    def __init__(self, local_path: str, episode_id: str):
-        self.local_path = local_path
+    def __init__(self, raw_content: str, episode_id: str):
+        """Initialize with raw content instead of file path"""
+        self._content = raw_content
         self.episode_id = episode_id
         self.file_id: Optional[str] = None
-        self._content: Optional[str] = None
 
     def _has_no_audio(self) -> bool:
         if not self._content:
@@ -21,11 +21,10 @@ class Transcript:
         return False
 
     def get_content(self) -> str:
-        if self._content is None:
-            self._content = read_file(self.local_path)
-            if self._has_no_audio():
-                logging.warning(f"[SKIP] {self.episode_id}: No Audio detected.")
-                raise ValueError(f"{self.episode_id}: No Audio detected.")
+        """Returns the raw transcript content"""
+        if self._has_no_audio():
+            logging.warning(f"[SKIP] {self.episode_id}: No Audio detected.")
+            raise ValueError(f"{self.episode_id}: No Audio detected.")
         return self._content
 
     def get_last_timestamp(self) -> Optional[str]:
@@ -54,10 +53,14 @@ class Transcript:
         final_ts = self.get_last_timestamp()
         return self.timestamp_to_seconds(final_ts)
 
-    def ensure_uploaded(self, model: GeminiModel) -> str:
+    def ensure_uploaded(self, model: GeminiModel, temp_path: str) -> str:
+        """Uploads content via temporary file"""
         if self.file_id is None:
             logging.info(f"Uploading transcript to Gemini: {self.episode_id}")
-            uploaded_file = model.upload_file(self.local_path)
+            with open(temp_path, 'w', encoding='utf-8') as f:
+                f.write(self._content)
+            uploaded_file = model.upload_file(temp_path)
+            os.remove(temp_path)
             if not uploaded_file or not uploaded_file.name:
                 raise ValueError(f"Failed to upload transcript: {self.episode_id}")
             self.file_id = uploaded_file.name

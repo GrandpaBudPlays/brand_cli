@@ -111,15 +111,7 @@ def find_transcript_and_metadata(full_ep_id, user_ip=None, user_series=None):
     }
 
 
-def _has_no_audio_transcript(file_path: str) -> bool:
-    with open(file_path, 'r', encoding='utf-8') as f:
-        header_chunk = f.read(500)
-        if "no audio" in header_chunk.lower():
-            has_no_audio = not bool(re.search(r'\d{1,2}:\d{2}', header_chunk))
-            return has_no_audio
-        else:
-            f.seek(0)
-    return False
+# Removed duplicate no-audio detection - use Transcript._has_no_audio() instead
 
 def load_transcript_asset(file_path: str) -> str:
     if not os.path.exists(file_path):
@@ -148,35 +140,7 @@ def resolve_lexicon_data(episode_str: str, series_info: dict) -> str:
     return ""
 
 
-def get_last_timestamp(text: str):
-    ts_pattern = r'\d+:\d+:\d+\.\d+|\d+:\d+\.\d+'
-    matches = re.findall(ts_pattern, text)
-    return matches[-1] if matches else None
-
-
-def timestamp_to_seconds(ts_str: str | None) -> float:
-    if not ts_str:
-        return 0.0
-    try:
-        parts = ts_str.split(':')
-        if len(parts) == 3:
-            h, m, s = parts
-            total = (int(h) * 3600) + (int(m) * 60) + float(s)
-        elif len(parts) == 2:
-            m, s = parts
-            total = (int(m) * 60) + float(s)
-        else:
-            total = float(parts[0])
-        return round(total, 2)
-    except (ValueError, IndexError):
-        return 0.0
-
-
-def get_video_duration(raw_content: str) -> float:
-    if not raw_content:
-        return 0.0
-    final_ts = get_last_timestamp(raw_content)
-    return timestamp_to_seconds(final_ts)
+# Removed duplicate timestamp/duration functions - use Transcript class methods instead
 
 
 def prepare_session_assets(args) -> Optional[WorkflowContext]:
@@ -198,32 +162,36 @@ def prepare_session_assets(args) -> Optional[WorkflowContext]:
         print(f"Error: Could not find '{full_ep_id} Transcript.md' or '{full_ep_id}/Transcript.md' in the configured archive paths.")
         sys.exit(1)
 
-    transcript_data = load_transcript_asset(str(file_info['path']))
-    if not transcript_data:
+    # Read file content first
+    with open(str(file_info['path']), 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Create Transcript with raw content
+    ts_obj = Transcript(raw_content=content, episode_id=full_ep_id)
+    
+    # Check for no-audio via Transcript class
+    if ts_obj._has_no_audio():
         print(f"Skipping {full_ep_id}: No Audio detected.")
         sys.exit(0)
-
+        
     lexicon_data = resolve_lexicon_data(episode, file_info["series_info"])
-    actual_duration = get_video_duration(transcript_data)
-    
     terms = get_terminology(file_info["ip_data"])
 
     if not season:
         raise ValueError("Season must be provided")
-    try:
-        ts_obj = Transcript(local_path=str(file_info['path']), episode_id=full_ep_id)
-        return WorkflowContext(
-            season=season,
-            episode=episode,
-            full_ep_id=full_ep_id,
-            target_filename="Transcript.md",
-            saga=str(file_info['saga']),
-            arc=str(file_info['arc']),
-            transcript=ts_obj,
-            lexicon=lexicon_data,
-            duration=ts_obj.get_video_duration(),
-            terms=terms
-        )
+        
+    return WorkflowContext(
+        season=season,
+        episode=episode,
+        full_ep_id=full_ep_id,
+        target_filename="Transcript.md",
+        saga=str(file_info['saga']),
+        arc=str(file_info['arc']),
+        transcript=ts_obj,
+        lexicon=lexicon_data,
+        duration=ts_obj.get_video_duration(),
+        terms=terms
+    )
     except ValueError as e:
         print(f"Skipping {full_ep_id}: {e}")
         return None
