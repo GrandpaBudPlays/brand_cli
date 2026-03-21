@@ -111,15 +111,17 @@ def find_transcript_and_metadata(full_ep_id, user_ip=None, user_series=None):
     }
 
 
-# Removed duplicate no-audio detection - use Transcript._has_no_audio() instead
+# No-audio detection is now handled by Transcript._has_no_audio() method
 
 def load_transcript_asset(file_path: str) -> str:
     if not os.path.exists(file_path):
         return ""
-    if _has_no_audio_transcript(file_path):
-        return ""
     with open(file_path, 'r', encoding='utf-8') as f:
-        return f.read()
+        content = f.read()
+    ts_obj = Transcript(raw_content=content, episode_id="")
+    if ts_obj._has_no_audio():
+        return ""
+    return content
 
 
 
@@ -144,56 +146,44 @@ def resolve_lexicon_data(episode_str: str, series_info: dict) -> str:
 
 
 def prepare_session_assets(args) -> Optional[WorkflowContext]:
-    season = args.season or CONTEXT.get("season")
-    episode = args.episode
-    
-    if not season and episode:
-        # User only passed episode, try to find it via context season
-        if CONTEXT.get("season"):
-            season = CONTEXT.get("season")
-        else:
+    try:
+        # Ensure season is always defined and typed as str
+        season: str = args.season or CONTEXT.get("season") or ""
+        episode: str = args.episode or ""
+        
+        if not season:
             print("Error: Season must be provided either as an argument or set in Context.")
             sys.exit(1)
 
-    full_ep_id = f"{season} {episode}"
+        full_ep_id = f"{season} {episode}"
+        file_info = find_transcript_and_metadata(full_ep_id, args.ip, args.series)
+        if not file_info:
+            print(f"Error: Could not find transcript for {full_ep_id}")
+            sys.exit(1)
 
-    file_info = find_transcript_and_metadata(full_ep_id, args.ip, args.series)
-    if not file_info:
-        print(f"Error: Could not find '{full_ep_id} Transcript.md' or '{full_ep_id}/Transcript.md' in the configured archive paths.")
-        sys.exit(1)
-
-    # Read file content first
-    with open(str(file_info['path']), 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    # Create Transcript with raw content
-    ts_obj = Transcript(raw_content=content, episode_id=full_ep_id)
-    
-    # Check for no-audio via Transcript class
-    if ts_obj._has_no_audio():
-        print(f"Skipping {full_ep_id}: No Audio detected.")
-        sys.exit(0)
+        with open(str(file_info['path']), 'r', encoding='utf-8') as f:
+            content = f.read()
         
-    lexicon_data = resolve_lexicon_data(episode, file_info["series_info"])
-    terms = get_terminology(file_info["ip_data"])
+        ts_obj = Transcript(raw_content=content, episode_id=full_ep_id)
+        if ts_obj._has_no_audio():
+            print(f"Skipping {full_ep_id}: No Audio detected.")
+            sys.exit(0)
+            
+        return WorkflowContext(
+            season=season,
+            episode=episode,
+            full_ep_id=full_ep_id,
+            target_filename="Transcript.md",
+            saga=str(file_info['saga']),
+            arc=str(file_info['arc']),
+            transcript=ts_obj,
+            lexicon=resolve_lexicon_data(episode, file_info["series_info"]),
+            duration=ts_obj.get_video_duration(),
+            terms=get_terminology(file_info["ip_data"])
+        )
 
-    if not season:
-        raise ValueError("Season must be provided")
-        
-    return WorkflowContext(
-        season=season,
-        episode=episode,
-        full_ep_id=full_ep_id,
-        target_filename="Transcript.md",
-        saga=str(file_info['saga']),
-        arc=str(file_info['arc']),
-        transcript=ts_obj,
-        lexicon=lexicon_data,
-        duration=ts_obj.get_video_duration(),
-        terms=terms
-    )
     except ValueError as e:
-        print(f"Skipping {full_ep_id}: {e}")
+        print(f"Skipping episode: {e}")
         return None
 
 
