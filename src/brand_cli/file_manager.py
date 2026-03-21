@@ -3,33 +3,11 @@ import os
 import pathlib
 import re
 import sys
-from dataclasses import dataclass
 from typing import Any, Optional
-from brand_cli.transcript import Transcript
-
+from brand_cli.workflow_context import WorkflowContext, Terminology
+from brand_cli.utils import read_file
 from brand_cli.config import CONFIG, CONTEXT, save_context
-
-
-@dataclass
-class Terminology:
-    ip: str = "IP"
-    series: str = "Series"
-    season: str = "Season"
-    arc: str = "Arc"
-
-@dataclass
-class SessionData:
-    season: str
-    episode: str
-    full_ep_id: str
-    target_filename: str
-    saga: str
-    arc: str
-    transcript_obj: 'Transcript'
-    lexicon: str
-    duration: float
-    terms: Terminology
-    uploaded_file: Optional[Any] = None
+from brand_cli.transcript import Transcript
 
 
 def resolve_ip_and_series(path: pathlib.Path):
@@ -151,11 +129,7 @@ def load_transcript_asset(file_path: str) -> str:
     with open(file_path, 'r', encoding='utf-8') as f:
         return f.read()
 
-def read_file(path: str) -> str:
-    if not os.path.exists(path):
-        return ""
-    with open(path, 'r', encoding='utf-8') as f:
-        return f.read()
+
 
 
 def resolve_lexicon_data(episode_str: str, series_info: dict) -> str:
@@ -205,7 +179,7 @@ def get_video_duration(raw_content: str) -> float:
     return timestamp_to_seconds(final_ts)
 
 
-def prepare_session_assets(args) -> Optional[SessionData]:
+def prepare_session_assets(args) -> Optional[WorkflowContext]:
     season = args.season or CONTEXT.get("season")
     episode = args.episode
     
@@ -238,14 +212,14 @@ def prepare_session_assets(args) -> Optional[SessionData]:
         raise ValueError("Season must be provided")
     try:
         ts_obj = Transcript(local_path=str(file_info['path']), episode_id=full_ep_id)
-        return SessionData(
+        return WorkflowContext(
             season=season,
             episode=episode,
             full_ep_id=full_ep_id,
             target_filename="Transcript.md",
             saga=str(file_info['saga']),
             arc=str(file_info['arc']),
-            transcript_obj=ts_obj,
+            transcript=ts_obj,
             lexicon=lexicon_data,
             duration=ts_obj.get_video_duration(),
             terms=terms

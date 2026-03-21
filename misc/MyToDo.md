@@ -84,4 +84,3 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
 * **Terminology Mapping Overhead (Section 4):**
     * *Risk:* The "Mental Translation Layer" between generic MAM code terms (`arc`) and brand-specific CLI output (`Biome`) increases debugging complexity and potential mapping nulls in prompt injection.
     * *Mitigation:* Centralize a `TermMapper` utility to ensure strict validation between `brand_config.json` and AI prompt variables.
-

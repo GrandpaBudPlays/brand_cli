@@ -1,14 +1,15 @@
 import json
 from typing import cast
 from brand_cli.ai.gemini import GeminiModel
-from brand_cli.file_manager import save_audit_report, SessionData
+from brand_cli.file_manager import save_audit_report
+from brand_cli.workflow_context import WorkflowContext
 from brand_cli.transcript import Transcript
 from brand_cli.prompts import get_prompt_library
 from brand_cli.prompts.gold_extraction import GoldExtractionPrompt
 from brand_cli.workflows.base import Workflow
 
 
-def json_to_gold_markdown(data: dict, session: SessionData) -> str:
+def json_to_gold_markdown(data: dict, session: WorkflowContext) -> str:
     md = f"# 🛡️ Gold Extraction Report: {session.full_ep_id}\n\n"
     
     md += f"## 📝 Summary Table\n{data.get('summary_table', '')}\n\n"
@@ -43,7 +44,7 @@ def json_to_gold_markdown(data: dict, session: SessionData) -> str:
 class GoldWorkflow(Workflow):
     """Generates the strategic gold extraction report."""
     
-    def execute(self, session: SessionData, model: GeminiModel) -> None:
+    def execute(self, session: WorkflowContext, model: GeminiModel) -> None:
         print("Starting Strategic Gold Extraction...")
         
         prompts = get_prompt_library("valheim")
@@ -68,11 +69,11 @@ class GoldWorkflow(Workflow):
             markdown_content = json_to_gold_markdown(data, session)
             
             # Save raw JSON for debugging and automation
-            save_audit_report(session.path, json.dumps(data, indent=2), "Gold", f"{result.model_name}-raw", ".json")
+            save_audit_report(session.transcript.local_path, json.dumps(data, indent=2), "Gold", f"{result.model_name}-raw", ".json")
             # Save human-readable Markdown
-            save_audit_report(session.path, markdown_content, "Gold", result.model_name)
+            save_audit_report(session.transcript.local_path, markdown_content, "Gold", result.model_name)
         except json.JSONDecodeError as e:
             print(f"JSON decode failed for Gold Extraction. Falling back to raw text. Error: {e}")
-            save_audit_report(session.path, result.content, "Gold", result.model_name)
+            save_audit_report(session.transcript.local_path, result.content, "Gold", result.model_name)
             
         print("Gold Extraction Complete.")

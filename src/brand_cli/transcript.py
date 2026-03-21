@@ -2,7 +2,7 @@ import re
 import logging
 from typing import Optional
 from brand_cli.ai.gemini import GeminiModel
-from brand_cli.file_manager import read_file
+from brand_cli.utils import read_file
 
 
 class Transcript:

@@ -1,13 +1,16 @@
 import json
+import logging
 from typing import cast
 from brand_cli.ai.gemini import GeminiModel
-from brand_cli.file_manager import SessionData, save_audit_report
+import logging
+from brand_cli.workflow_context import WorkflowContext
+from brand_cli.file_manager import save_audit_report
 from brand_cli.prompts import get_prompt_library
 from brand_cli.prompts.audit import AuditPrompt
 from brand_cli.workflows.base import Workflow
 
 
-def json_to_audit_markdown(data: dict, session: SessionData) -> str:
+def json_to_audit_markdown(data: dict, session: WorkflowContext) -> str:
     terms = session.terms
     md = f"# 🛡️ CONTENT AUDIT REPORT: {session.full_ep_id}\n\n"
     md += f"* **Total Stream Duration:** {int(session.duration // 60):02d}:{int(session.duration % 60):02d}\n"
@@ -83,7 +86,7 @@ def json_to_audit_markdown(data: dict, session: SessionData) -> str:
 class FeedbackWorkflow(Workflow):
     """Generates the tactical Feedback report."""
     
-    def execute(self, session: SessionData, model: GeminiModel) -> None:
+    def execute(self, session: WorkflowContext, model: GeminiModel) -> None:
         self._ensure_transcript_ready(session, model)
         logging.info("[FEEDBACK] Starting for %s", session.full_ep_id)
         
@@ -92,7 +95,7 @@ class FeedbackWorkflow(Workflow):
         
         prompt = audit_prompt.build_audit_prompt(
             episode_id=session.full_ep_id,
-            duration=str(int(session.transcript_obj.get_video_duration())),
+            duration=str(int(session.transcript.get_video_duration())),
             arc=session.arc,
             lexicon_context=session.lexicon,
             arc_term=session.terms.arc
@@ -115,10 +118,10 @@ class FeedbackWorkflow(Workflow):
             markdown_content = json_to_audit_markdown(data, session)
             
             # Save reports
-            save_audit_report(session.transcript_obj.local_path, json.dumps(data, indent=2), "Audit", f"{result.model_name}-raw", ".json")
-            save_audit_report(session.transcript_obj.local_path, markdown_content, "Audit", result.model_name)
+            save_audit_report(session.transcript.local_path, json.dumps(data, indent=2), "Audit", f"{result.model_name}-raw", ".json")
+            save_audit_report(session.transcript.local_path, markdown_content, "Audit", result.model_name)
         except json.JSONDecodeError as e:
             logging.warning("JSON decode failed for Feedback. Falling back to raw text. Error: %s", e)
-            save_audit_report(session.transcript_obj.local_path, result.content, "Audit", result.model_name)
+            save_audit_report(session.transcript.local_path, result.content, "Audit", result.model_name)
             
         logging.info("[FEEDBACK] Completed for %s", session.full_ep_id)
