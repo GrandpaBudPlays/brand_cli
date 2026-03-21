@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 from typing import cast
 from brand_cli.ai.gemini import GeminiModel
@@ -9,8 +10,8 @@ from brand_cli.prompts.gold_extraction import GoldExtractionPrompt
 from brand_cli.workflows.base import Workflow
 
 
-def json_to_gold_markdown(data: dict, session: WorkflowContext) -> str:
-    md = f"# 🛡️ Gold Extraction Report: {session.full_ep_id}\n\n"
+def json_to_gold_markdown(data: dict, context: WorkflowContext) -> str:
+    md = f"# 🛡️ Gold Extraction Report: {context.full_ep_id}\n\n"
     
     md += f"## 📝 Summary Table\n{data.get('summary_table', '')}\n\n"
     md += f"## 🧠 Editor's Notes\n{data.get('editors_notes', '')}\n\n"
@@ -44,13 +45,13 @@ def json_to_gold_markdown(data: dict, session: WorkflowContext) -> str:
 class GoldWorkflow(Workflow):
     """Generates the strategic gold extraction report."""
     
-    def execute(self, session: WorkflowContext, model: GeminiModel) -> None:
+    def execute(self, context: WorkflowContext, model: GeminiModel) -> None:
         print("Starting Strategic Gold Extraction...")
         
         prompts = get_prompt_library("valheim")
         gold_prompt: GoldExtractionPrompt = cast(GoldExtractionPrompt, prompts.get("gold_extraction"))
         
-        prompt = gold_prompt.build_gold_prompt(duration_sec=session.duration)
+        prompt = gold_prompt.build_gold_prompt(duration_sec=context.duration)
         
         temperature = gold_prompt.get_temperature(model.name)
         result = model.generate(
@@ -58,7 +59,7 @@ class GoldWorkflow(Workflow):
             system_instruction=gold_prompt.get_system_instruction(),
             temperature=temperature,
             response_mime_type="application/json",
-            file_obj=session.uploaded_file
+            file_obj=context.uploaded_file
         )
         
         if not result.success:
@@ -66,14 +67,14 @@ class GoldWorkflow(Workflow):
         
         try:
             data = json.loads(result.content)
-            markdown_content = json_to_gold_markdown(data, session)
+            markdown_content = json_to_gold_markdown(data, context)
             
             # Save raw JSON for debugging and automation
-            save_audit_report(session.transcript.local_path, json.dumps(data, indent=2), "Gold", f"{result.model_name}-raw", ".json")
+            save_audit_report(context.transcript.local_path, json.dumps(data, indent=2), "Gold", f"{result.model_name}-raw", ".json")
             # Save human-readable Markdown
-            save_audit_report(session.transcript.local_path, markdown_content, "Gold", result.model_name)
+            save_audit_report(context.transcript.local_path, markdown_content, "Gold", result.model_name)
         except json.JSONDecodeError as e:
             print(f"JSON decode failed for Gold Extraction. Falling back to raw text. Error: {e}")
-            save_audit_report(session.transcript.local_path, result.content, "Gold", result.model_name)
+            save_audit_report(context.transcript.local_path, result.content, "Gold", result.model_name)
             
         print("Gold Extraction Complete.")

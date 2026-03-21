@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 import logging
 from typing import cast
@@ -10,12 +11,12 @@ from brand_cli.prompts.audit import AuditPrompt
 from brand_cli.workflows.base import Workflow
 
 
-def json_to_audit_markdown(data: dict, session: WorkflowContext) -> str:
-    terms = session.terms
-    md = f"# 🛡️ CONTENT AUDIT REPORT: {session.full_ep_id}\n\n"
-    md += f"* **Total Stream Duration:** {int(session.duration // 60):02d}:{int(session.duration % 60):02d}\n"
-    md += f"* **Total Seconds:** {int(session.duration)}\n"
-    md += f"* **Current {terms.arc}:** {session.arc}\n"
+def json_to_audit_markdown(data: dict, context: WorkflowContext) -> str:
+    terms = context.terms
+    md = f"# 🛡️ CONTENT AUDIT REPORT: {context.full_ep_id}\n\n"
+    md += f"* **Total Stream Duration:** {int(context.duration // 60):02d}:{int(context.duration % 60):02d}\n"
+    md += f"* **Total Seconds:** {int(context.duration)}\n"
+    md += f"* **Current {terms.arc}:** {context.arc}\n"
     md += "* **Brand Voice Status:** Plain Speech / Helpful Guidance\n\n"
     md += "---\n\n"
 
@@ -74,7 +75,7 @@ def json_to_audit_markdown(data: dict, session: WorkflowContext) -> str:
     md += f"* **Safety Protocol:** {sa.get('safety_protocol_notes', 'N/A')}\n\n"
     
     md += "### 3.2 PERFORMANCE OUTCOMES\n"
-    md += f"* **Session Goal Status:** {sa.get('session_goal_status', 'N/A')}\n"
+    md += f"* **Session Goal Status:** {sa.get('context_goal_status', 'N/A')}\n"
     md += f"* **Highlight Gold:**\n"
     for hg in sa.get('highlight_gold', []):
         md += f"    * {hg}\n"
@@ -86,19 +87,19 @@ def json_to_audit_markdown(data: dict, session: WorkflowContext) -> str:
 class FeedbackWorkflow(Workflow):
     """Generates the tactical Feedback report."""
     
-    def execute(self, session: WorkflowContext, model: GeminiModel) -> None:
-        self._ensure_transcript_ready(session, model)
-        logging.info("[FEEDBACK] Starting for %s", session.full_ep_id)
+    def execute(self, context: WorkflowContext, model: GeminiModel) -> None:
+        self._ensure_transcript_ready(context, model)
+        logging.info("[FEEDBACK] Starting for %s", context.full_ep_id)
         
         prompts = get_prompt_library("valheim")
         audit_prompt: AuditPrompt = cast(AuditPrompt, prompts.get("audit"))
         
         prompt = audit_prompt.build_audit_prompt(
-            episode_id=session.full_ep_id,
-            duration=str(int(session.transcript.get_video_duration())),
-            arc=session.arc,
-            lexicon_context=session.lexicon,
-            arc_term=session.terms.arc
+            episode_id=context.full_ep_id,
+            duration=str(int(context.transcript.get_video_duration())),
+            arc=context.arc,
+            lexicon_context=context.lexicon,
+            arc_term=context.terms.arc
         )
         
         temperature = audit_prompt.get_temperature(model.name)
@@ -107,7 +108,7 @@ class FeedbackWorkflow(Workflow):
             system_instruction=audit_prompt.get_system_instruction(),
             temperature=temperature,
             response_mime_type="application/json",
-            file_obj=session.uploaded_file
+            file_obj=context.uploaded_file
         )
         
         if not result.success:
@@ -115,13 +116,13 @@ class FeedbackWorkflow(Workflow):
             
         try:
             data = json.loads(result.content)
-            markdown_content = json_to_audit_markdown(data, session)
+            markdown_content = json_to_audit_markdown(data, context)
             
             # Save reports
-            save_audit_report(session.transcript.local_path, json.dumps(data, indent=2), "Audit", f"{result.model_name}-raw", ".json")
-            save_audit_report(session.transcript.local_path, markdown_content, "Audit", result.model_name)
+            save_audit_report(context.transcript.local_path, json.dumps(data, indent=2), "Audit", f"{result.model_name}-raw", ".json")
+            save_audit_report(context.transcript.local_path, markdown_content, "Audit", result.model_name)
         except json.JSONDecodeError as e:
             logging.warning("JSON decode failed for Feedback. Falling back to raw text. Error: %s", e)
-            save_audit_report(session.transcript.local_path, result.content, "Audit", result.model_name)
+            save_audit_report(context.transcript.local_path, result.content, "Audit", result.model_name)
             
-        logging.info("[FEEDBACK] Completed for %s", session.full_ep_id)
+        logging.info("[FEEDBACK] Completed for %s", context.full_ep_id)

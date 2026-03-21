@@ -1,3 +1,4 @@
+from __future__ import annotations
 from brand_cli.ai.gemini import GeminiModel
 from brand_cli.transcript import Transcript
 from brand_cli.workflow_context import WorkflowContext

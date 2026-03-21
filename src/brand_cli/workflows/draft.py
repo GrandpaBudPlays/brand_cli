@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import json
 from typing import cast
@@ -16,7 +17,7 @@ class DraftWorkflow(Workflow):
         print(f"Executing Draft Workflow - Pass {pass_name}")
         
         # Paths
-        base_dir = os.path.dirname(context.transcript_obj.local_path)
+        base_dir = os.path.dirname(context.transcript.local_path)
         
         extraction_json_path = os.path.join(base_dir, "Extraction.json")
         hints_path = os.path.join(base_dir, "hints.txt")
@@ -38,7 +39,7 @@ class DraftWorkflow(Workflow):
             file_obj = None
             try:
                 # Upload transcript via File API
-                file_obj = model.upload_file(session.transcript_obj.local_path, display_name=f"Transcript_{context.full_ep_id}")
+                file_obj = model.upload_file(context.transcript.local_path, display_name=f"Transcript_{context.full_ep_id}")
                 
                 result = model.generate(
                     prompt,
@@ -54,7 +55,7 @@ class DraftWorkflow(Workflow):
             if not result.success:
                 raise RuntimeError(f"Pass 1 Failed: {result.error}")
                 
-            save_audit_report(context.transcript_obj.local_path, result.content, "Extraction", None, ".json")
+            save_audit_report(context.transcript.local_path, result.content, "Extraction", None, ".json")
             print(f"\nPass 1 Complete! Review the factual events in:\n{extraction_json_path}")
             print("\nTo continue to Pass 2 (Creative Writing), run the same command with '--continue'")
             return
@@ -106,7 +107,7 @@ class DraftWorkflow(Workflow):
                 draft_data = json.loads(result.content)
             except json.JSONDecodeError as e:
                 print(f"JSON Decode Error in Pass 2: {e}")
-                save_audit_report(context.transcript_obj.local_path, result.content, "Draft - Raw Error", None, ".json")
+                save_audit_report(context.transcript.local_path, result.content, "Draft - Raw Error", None, ".json")
                 return
 
             # Check if SEO Pass 3 is needed
@@ -114,9 +115,9 @@ class DraftWorkflow(Workflow):
             
             if not seo_keywords:
                 print("\n--- No seo.txt found. Skipping Pass 3. Generating final markdown... ---")
-                final_md = self._build_markdown(draft_data, draft_data, session)
-                save_audit_report(session.transcript_obj.local_path, final_md, "Description", None, ".md")
-                save_audit_report(context.transcript_obj.local_path, json.dumps(draft_data, indent=2), "Draft", None, ".json")
+                final_md = self._build_markdown(draft_data, draft_data, context)
+                save_audit_report(context.transcript.local_path, final_md, "Description", None, ".md")
+                save_audit_report(context.transcript.local_path, json.dumps(draft_data, indent=2), "Draft", None, ".json")
                 print("\nDraft Pipeline Complete.")
                 return
                 
@@ -136,18 +137,18 @@ class DraftWorkflow(Workflow):
                 
             try:
                 seo_data = json.loads(seo_result.content)
-                final_md = self._build_markdown(draft_data, seo_data, session)
+                final_md = self._build_markdown(draft_data, seo_data, context)
                 
                 # Save outputs
-                save_audit_report(context.transcript_obj.local_path, json.dumps(draft_data, indent=2), "Draft - Original", None, ".json")
-                save_audit_report(context.transcript_obj.local_path, json.dumps(seo_data, indent=2), "Draft - SEO", None, ".json")
-                save_audit_report(session.transcript_obj.local_path, final_md, "Description", None, ".md")
+                save_audit_report(context.transcript.local_path, json.dumps(draft_data, indent=2), "Draft - Original", None, ".json")
+                save_audit_report(context.transcript.local_path, json.dumps(seo_data, indent=2), "Draft - SEO", None, ".json")
+                save_audit_report(context.transcript.local_path, final_md, "Description", None, ".md")
                 
                 print("\nDraft Pipeline Complete with SEO!")
                 
             except json.JSONDecodeError as e:
                 print(f"JSON Decode Error in Pass 3: {e}")
-                save_audit_report(context.transcript_obj.local_path, seo_result.content, "Draft - SEO Raw Error", None, ".json")
+                save_audit_report(context.transcript.local_path, seo_result.content, "Draft - SEO Raw Error", None, ".json")
                 return
 
 

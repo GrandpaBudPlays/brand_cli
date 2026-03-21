@@ -1,3 +1,4 @@
+from __future__ import annotations
 import logging
 from brand_cli.ai.gemini import GeminiModel
 from brand_cli.workflow_context import WorkflowContext
@@ -12,16 +13,16 @@ class AuditWorkflow(Workflow):
     def execute(self, context: WorkflowContext, model: GeminiModel) -> None:
         try:
             # Upload transcript once for all sub-workflows
-            session.uploaded_file = context.transcript_obj.ensure_uploaded(model)
-            logging.info(f"[CLOUD] Parent workflow managing transcript: {session.full_ep_id}")
+            context.uploaded_file = context.transcript.ensure_uploaded(model)
+            logging.info(f"[CLOUD] Parent workflow managing transcript: {context.full_ep_id}")
             
             # Run sub-workflows
-            FeedbackWorkflow().execute(session, model)
-            GoldWorkflow().execute(session, model)
+            FeedbackWorkflow().execute(context, model)
+            GoldWorkflow().execute(context, model)
             
             print("Audit workflow completed: Feedback and Gold reports generated.")
         finally:
             # Clean up remote file
-            if session.uploaded_file:
-                logging.info(f"[CLOUD] Cleaning up parent-managed transcript: {session.full_ep_id}")
-                model.delete_file(session.uploaded_file)
+            if context.uploaded_file:
+                logging.info(f"[CLOUD] Cleaning up parent-managed transcript: {context.full_ep_id}")
+                model.delete_file(context.uploaded_file)
