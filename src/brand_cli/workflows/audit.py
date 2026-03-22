@@ -12,8 +12,6 @@ class AuditWorkflow(Workflow):
     
     def execute(self, context: WorkflowContext, model: GeminiModel) -> None:
         try:
-            # Upload transcript once for all sub-workflows
-            context.uploaded_file = context.transcript.ensure_uploaded(model)
             logging.info(f"[CLOUD] Parent workflow managing transcript: {context.full_ep_id}")
             
             # Run sub-workflows

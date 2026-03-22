@@ -88,7 +88,6 @@ class FeedbackWorkflow(Workflow):
     """Generates the tactical Feedback report."""
     
     def execute(self, context: WorkflowContext, model: GeminiModel) -> None:
-        self._ensure_transcript_ready(context, model)
         logging.info("[FEEDBACK] Starting for %s", context.full_ep_id)
         
         prompts = get_prompt_library("valheim")

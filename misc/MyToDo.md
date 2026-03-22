@@ -89,3 +89,29 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
 
 
 ---
+
+
+(venv) bud@Tank7:~/dev/brand_cli$ brand gold S01 E001
+--- Loading archive from: /home/bud/dev/Stream-Archive ---
+Active Context -> IP: All | Series: All | Season: None
+Loading Lexicon: /home/bud/dev/Stream-Archive/010-Valheim/Saga-Lexicon-Valheim.md
+--- Processing (Operation: Gold) on S01 E001  ---
+Uploading transcript to Gemini: /home/bud/dev/Stream-Archive/010-Valheim/Chronicles-Of-The-Exile/Saga I/S01 E001/Transcript.md
+Uploading file to Gemini API: /home/bud/dev/Stream-Archive/010-Valheim/Chronicles-Of-The-Exile/Saga I/S01 E001/Transcript.md
+HTTP Request: POST https://generativelanguage.googleapis.com/upload/v1beta/files "HTTP/1.1 200 OK"
+HTTP Request: POST https://generativelanguage.googleapis.com/upload/v1beta/files?upload_id=AGQBYWz_Bd3BWUYl1AMOOyvMU75_yK9eLSSyfXC2WkecV1BZU39_JzcB4oJxQr7hSJe-hJ1h1NjzDrLaYH03qr1E3UrpdsYHP2GPPaGbooMeubU&upload_protocol=resumable "HTTP/1.1 200 OK"
+Upload complete. URI: https://generativelanguage.googleapis.com/v1beta/files/xtc351rie4t8
+Client initialized.
+Starting Strategic Gold Extraction...
+Processing uploaded file: files/xtc351rie4t8
+Including file in request: files/xtc351rie4t8
+Attempting to generate content with model 'gemini-3-flash-preview'...
+AFC is enabled with max remote calls: 10.
+HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+--- Cost Report (gemini-3-flash-preview) ---
+Input:  10,678 tokens ($0.0053)
+Output: 1,107 tokens ($0.0033)
+Total:  $0.0087
+SUCCESS: Gold saved to /home/bud/dev/Stream-Archive/010-Valheim/Chronicles-Of-The-Exile/Saga I/S01 E001/Gold - gemini-3-flash-preview-raw.json
+SUCCESS: Gold saved to /home/bud/dev/Stream-Archive/010-Valheim/Chronicles-Of-The-Exile/Saga I/S01 E001/Gold - gemini-3-flash-preview.md
+Gold Extraction Complete.

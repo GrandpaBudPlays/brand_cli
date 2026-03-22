@@ -178,12 +178,15 @@ class GeminiModel(BaseAIModel):
         )
         logger.info(f"Upload complete. URI: {uploaded_file.uri}")
         return uploaded_file
-
-    def delete_file(self, file_name: str) -> None:
+    
+    def delete_file(self, file_obj: Any) -> None:
         """Deletes a file from the Gemini API."""
         try:
+            # Extract the 'name' string from the file object
+            file_name = getattr(file_obj, 'name', str(file_obj))
+            
             logger.info(f"Deleting remote file: {file_name}")
             self._client.files.delete(name=file_name)
-            logger.info("File deleted successfully.")
+            logger.info("Remote file deleted successfully.")
         except Exception as e:
-            logger.error(f"Failed to delete remote file {file_name}: {e}")
+            logger.error(f"Failed to delete remote file {file_obj}: {e}")

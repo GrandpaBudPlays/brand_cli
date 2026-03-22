@@ -1,6 +1,10 @@
 from brand_cli.prompts.base import BasePrompt, PromptConfig
 
 class DraftExtractionPrompt(BasePrompt):
+    def __init__(self, context, model):
+        super().__init__()
+        self.context = context
+        self.model = model
     """Pass 1: Extract factual events for the narrative description."""
     @property
     def name(self) -> str: return "draft_extraction"
@@ -23,9 +27,15 @@ TRANSCRIPT:
 {transcript}""",
             temperature=0.1
         )
-    def build_extraction_prompt(self, transcript: str, hints: str = "") -> str:
-        hints_text = f"USER HINTS (Prioritize these events):\n{hints}\n" if hints else ""
-        return self.build_prompt(hints_text=hints_text)
+
+    def build_extraction_prompt(self, hints: str = "") -> str:
+        # Include all variables that your template expects
+        return self.build_prompt(
+            hints_text=hints,
+            episode_id=self.context.full_ep_id,
+            lexicon=self.context.lexicon,
+            # Add any others your template uses here
+        )
 
 class DraftCreativePrompt(BasePrompt):
     """Pass 2: The Triple-Threat Creative Draft."""
