@@ -21,16 +21,21 @@ class DraftWorkflow(Workflow):
     Pass 4: Final Assembly (Data -> Markdown)
     """
 
+    def __init__(self):
+        super().__init__()
+        import logging
+        self.logger = logging.getLogger(__name__)
+
     def execute(self, context: WorkflowContext, model: GeminiModel):
         pass_number = os.getenv("DRAFT_PASS", "1")
-        print(f"Executing Draft Workflow - Pass {pass_number}")
+        self.logger.info(f"Executing Draft Workflow - Pass {pass_number}")
 
         if pass_number == "1":
             return self._run_extraction_pass(context, model)
         elif pass_number == "2":
             return self._run_creative_and_seo_pipeline(context, model)
         else:
-            print(f"Unknown pass number: {pass_number}")
+            self.logger.error(f"Unknown pass number: {pass_number}")
             return None
 
     # --- Pipeline Coordination ---
@@ -160,13 +165,36 @@ class DraftWorkflow(Workflow):
         arc_dir = base_dir.parent
         # 010-Valheim (Saga level)
         saga_dir = arc_dir.parent
-        # Content Root (Brand-Context level)
+        # Content Root (.brand_context level)
         root_dir = saga_dir.parent 
 
+        ulf_path = str(arc_dir / "Ulf Persona.md")
+        protocol_path = str(saga_dir / "Descriptions.md")
+        brand_path = str(saga_dir / ".brand_context")
+
+        ulf_content = read_file(ulf_path)
+        protocol_content = read_file(protocol_path)
+        brand_content = read_file(brand_path)
+
+        if ulf_content:
+            self.logger.info(f"Loaded Ulf Persona from {ulf_path}")
+        else:
+            self.logger.error(f"Ulf Persona not found at {ulf_path}")
+
+        if protocol_content:
+            self.logger.info(f"Loaded Descriptions Protocol from {protocol_path}")
+        else:
+            self.logger.error(f"Descriptions Protocol not found at {protocol_path}")
+
+        if brand_content:
+            self.logger.info(f"Loaded Brand Context from {brand_path}")
+        else:
+            self.logger.error(f"Brand Context not found at {brand_path}")
+
         return {
-            "ulf": read_file(str(arc_dir / "Ulf Persona.md")) or "",
-            "protocol": read_file(str(saga_dir / "Descriptions.md")) or "",
-            "brand": read_file(str(root_dir / "Personal-Notes" / "Brand-Context.md")) or ""
+            "ulf": ulf_content or "",
+            "protocol": protocol_content or "",
+            "brand": brand_content or ""
         }
 
     def _generate_with_transcript(self, prompt: str, loader: PromptLoader, context: WorkflowContext, model: GeminiModel):
@@ -213,7 +241,7 @@ class DraftWorkflow(Workflow):
         md += f"**[Conrad's Chronicle]**\n{chronicle}\n\n"
         md += "---\n\n"
         md += "## 🔗 Standard Link Repository\n"
-        md += "[Insert Link Repository from Brand-Context.md here]\n\n"
+        md += "[Insert Link Repository from Standard Link Repository.md here]\n\n"
         md += "## 🏷️ SEO & Metadata\n"
         md += f"**Injected Tags:** {', '.join(tags)}" if tags else "*No SEO injection performed.*"
         return md

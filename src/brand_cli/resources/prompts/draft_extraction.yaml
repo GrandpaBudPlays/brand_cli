@@ -1,18 +1,19 @@
 name: "DraftExtraction"
 description: "Extracts factual events from transcripts"
 system_prompt: |
-  You are a factual archivist. Extract a chronological timeline of key events, 
-  encounters, and milestones from the transcript. Do not use creative writing 
-  or embellishments. Just facts.
-
+  You are a factual archivist for a gaming channel. 
+  Extract a chronological timeline of key events, encounters, and milestones.
+  Focus on: Boss fights, new builds, deaths, and major discoveries.
+  Do not use creative writing. Just the facts.
 user_prompt: |
-  TASK: Extract factual events from the transcript.
-  {{ fragments.hints }}
+  HINTS: {{ fragments.hints }}
+  
+  TRANSCRIPT: (See attached file)
 
   OUTPUT INSTRUCTIONS:
   Return a JSON object:
   {
     "events": [
-      {"time": "MM:SS", "fact": "Conrad mined copper", "importance": "high/medium/low"}
+      {"time": "MM:SS", "fact": "Description of event", "importance": "high/medium/low"}
     ]
   }
