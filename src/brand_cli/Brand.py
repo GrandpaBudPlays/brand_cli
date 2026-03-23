@@ -45,13 +45,13 @@ def main():
             )
         model_runner = ModelRunner()
         print("Client initialized.")
+        
+        # Let the registry resolve and execute the workflow
+        workflow = get_workflow(operation)
+        workflow.execute(session, gemini_model)
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
-
-    # Let the registry resolve and execute the workflow
-    workflow = get_workflow(operation)
-    workflow.execute(session, gemini_model)
 
 if __name__ == "__main__":
     main()
