@@ -15,27 +15,24 @@ class Workflow(ABC):
 
     def _process_json_result(self, result: Any, context, report_name, formatter_func=None) -> dict[str, Any]:
         if not result.success:
-            raise RuntimeError(f"Failed to generate {report_name}: {result.error}")
-        
-        try:
-            # Handle both direct JSON responses and mock objects
-            if hasattr(result, 'json') and callable(result.json):
-                data = result.json()
-            else:
-                data = json.loads(result.content if hasattr(result, 'content') else result)
-            
-            # Save raw JSON - skip for mock objects
-            if not hasattr(result, '_mock_return_value'):
-                save_audit_report(context.transcript_path, json.dumps(data, indent=2), report_name, f"{result.model_name}-raw", ".json")
-            
+            raise RuntimeError(f"{report_name} failed: {result.error}")
+
+        # Handle Mock/Dict inputs or extract from content/text
+        if isinstance(result, dict):
+            data = result
+        elif hasattr(result, 'content') and isinstance(result.content, str):
+            json_str = result.content
+            data = json.loads(json_str)
+        else:
+            json_str = getattr(result, 'text', str(result))
+            data = json.loads(json_str) if isinstance(json_str, str) else {}
+
+        # Audit/Report logic (Skip if testing)
+        if not hasattr(result, '_mock_return_value'):
+            save_audit_report(context.transcript_path, json.dumps(data, indent=2), report_name, f"{result.model_name}-raw", ".json")
             if formatter_func:
-                markdown_content = formatter_func(data, context)
-                save_audit_report(context.transcript_path, markdown_content, report_name, result.model_name)
-            
-            return data if isinstance(data, dict) else {} # Return the data for multi-pass workflows
-                
-        except json.JSONDecodeError as e:
-            print(f"JSON decode failed for {report_name}. Falling back to raw text. Error: {e}")
-            save_audit_report(context.transcript_path, result.content, report_name, result.model_name)
-            return {}
+                formatted = formatter_func(data, context)
+                save_audit_report(context.transcript_path, formatted, report_name, result.model_name)
+
+        return data
         
