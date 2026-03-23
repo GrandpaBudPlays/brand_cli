@@ -22,6 +22,9 @@ class Transcript:
 
     def get_content(self) -> str:
         """Returns the raw transcript content"""
+        if not self._content:
+            logging.warning(f"[SKIP] {self.episode_id}: Empty transcript")
+            raise ValueError(f"{self.episode_id}: Empty transcript")
         if self._has_no_audio():
             logging.warning(f"[SKIP] {self.episode_id}: No Audio detected.")
             raise ValueError(f"{self.episode_id}: No Audio detected.")
