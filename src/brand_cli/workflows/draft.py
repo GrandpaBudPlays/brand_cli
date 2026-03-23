@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import cast, Optional, Dict, Any, TYPE_CHECKING, Tuple
 from brand_cli.ai.gemini import GeminiModel
 from brand_cli.file_manager import save_audit_report, read_file
-from brand_cli.prompts.draft import DraftExtractionPrompt, DraftCreativePrompt, DraftSEOPrompt
+from brand_cli.prompts.loader import PromptLoader
 from brand_cli.workflows.base import Workflow
 
 if TYPE_CHECKING:
@@ -41,11 +41,18 @@ class DraftWorkflow(Workflow):
         base_dir = Path(context.transcript_path).parent
         hints = read_file(str(base_dir / "hints.txt")) or ""
         
-        prompt_gen = DraftExtractionPrompt(context, model)
-        prompt_text = prompt_gen.build_extraction_prompt(hints)
+        loader = PromptLoader()
+        prompt_text = loader.load_prompt(
+            "draft_extraction",
+            fragments={"hints": hints},
+            session_data={
+                "episode_id": context.full_ep_id,
+                "lexicon": context.lexicon
+            }
+        )["user_prompt"]
 
         # Uses helper to handle transcript upload/deletion
-        result = self._generate_with_transcript(prompt_text, prompt_gen, context, model)
+        result = self._generate_with_transcript(prompt_text, loader, context, model)
         
         # Save raw JSON for Pass 2 to consume
         data = self._process_json_result(result, context, "Extraction")
@@ -92,18 +99,25 @@ class DraftWorkflow(Workflow):
         base_dir = Path(context.transcript_path).parent
         assets = self._load_brand_assets(base_dir)
         
-        creative_gen = DraftCreativePrompt()
-        prompt = creative_gen.build_creative_prompt(
-            events_json=events_json,
-            brand_context=assets['brand'],
-            ulf_persona=assets['ulf'],
-            descriptions_protocol=assets['protocol']
+        loader = PromptLoader()
+        prompt_data = loader.load_prompt(
+            "draft_creative",
+            fragments={
+                "brand_context": assets['brand'],
+                "ulf_persona": assets['ulf'],
+                "descriptions_protocol": assets['protocol']
+            },
+            session_data={
+                "game": "valheim",
+                "events_json": events_json
+            }
         )
+        prompt = prompt_data["user_prompt"]
         
         result = model.generate(
             prompt,
-            system_instruction=creative_gen.get_system_instruction(),
-            temperature=creative_gen.config.temperature,
+            system_instruction=prompt_data["system_prompt"],
+            temperature=0.4,
             response_mime_type="application/json"
         )
         
@@ -120,13 +134,18 @@ class DraftWorkflow(Workflow):
             return draft_data, None
 
         print("\n--- Pass 3: SEO Injection ---")
-        seo_gen = DraftSEOPrompt()
-        prompt = seo_gen.build_seo_prompt(json.dumps(draft_data), seo_keywords)
+        loader = PromptLoader()
+        prompt_data = loader.load_prompt(
+            "draft_seo",
+            fragments={"seo_keywords": seo_keywords},
+            session_data={"draft_json": json.dumps(draft_data)}
+        )
+        prompt = prompt_data["user_prompt"]
         
         result = model.generate(
             prompt,
-            system_instruction=seo_gen.get_system_instruction(),
-            temperature=seo_gen.config.temperature,
+            system_instruction=prompt_data["system_prompt"],
+            temperature=0.1,
             response_mime_type="application/json"
         )
         
@@ -150,7 +169,7 @@ class DraftWorkflow(Workflow):
             "brand": read_file(str(root_dir / "Personal-Notes" / "Brand-Context.md")) or ""
         }
 
-    def _generate_with_transcript(self, prompt: str, prompt_obj: Any, context: WorkflowContext, model: GeminiModel):
+    def _generate_with_transcript(self, prompt: str, loader: PromptLoader, context: WorkflowContext, model: GeminiModel):
         """Standardizes the temporary upload and cleanup of the transcript file."""
         file_obj = None
         try:
@@ -158,10 +177,15 @@ class DraftWorkflow(Workflow):
                 context.transcript_path, 
                 display_name=f"TS_{context.full_ep_id}"
             )
+            prompt_data = loader.load_prompt(
+                "draft_extraction",
+                fragments={"hints": ""},
+                session_data={"episode_id": context.full_ep_id}
+            )
             return model.generate(
                 prompt,
-                system_instruction=prompt_obj.get_system_instruction(),
-                temperature=prompt_obj.config.temperature,
+                system_instruction=prompt_data["system_prompt"],
+                temperature=0.4,
                 response_mime_type="application/json",
                 file_obj=file_obj
             )

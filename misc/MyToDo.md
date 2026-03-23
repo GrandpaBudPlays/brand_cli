@@ -2,7 +2,7 @@
 # Priority One Changes
 - remove Transcript functions from file_manager, change all calls to Transcript.
 - find and remove all hard coded paths from file_manager
-## Audit: I recommend adding a final instruction to the agent to delete the misc/ folder leftovers once the src/ integration is verified.
+
 
 # Priority 2 Changes
 ## 🎯 Project Goal
@@ -11,7 +11,6 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
 - Change Feedback, ask AI for the list of filler words. Count in python.
 
 # Priority 3 Changes
-## Can we change file_manager.load_transcript_asset to a more generic load_archive_asset
 - Review README.md, ARCHITECTURE.md, ./docs/brand_cli.md
 - Add ability to view the current context
 - Add ability to list available context settings (read the directory structure)
@@ -22,6 +21,7 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
 # Priority 4 Changes
 - Modify Help to use defined terms for IP, Series, Season, Episode
 - Does SessonData class belong in fileManager?
+- Can we change file_manager.load_transcript_asset to a more generic load_archive_asset
 
 
 ### 🏛️ Architectural Decisions

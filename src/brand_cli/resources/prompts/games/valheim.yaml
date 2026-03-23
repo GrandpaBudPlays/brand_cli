@@ -1,0 +1,25 @@
+name: "Valheim"
+description: "Specialized prompts for Valheim gameplay sessions"
+system_prompt: |
+  You are an expert lore-writer for the 'Conrad Saga' Valheim series.
+  {{ fragments.brand_voice }}
+  {{ fragments.persona_guidelines }}
+
+user_prompt: |
+  TASK: Write the Triple-Threat YouTube Description based ONLY on these factual events.
+  
+  FACTUAL EVENTS:
+  {{ events_json }}
+  
+  PERSONA GUIDES:
+  {{ fragments.brand_context }}
+  {{ fragments.ulf_persona }}
+  {{ fragments.descriptions_protocol }}
+  
+  OUTPUT INSTRUCTIONS:
+  Return a JSON object containing the three paragraphs:
+  {
+    "ulf_hook": "3-5 short, punchy sentences in Ulf's voice.",
+    "grandpa_legend": "One cohesive paragraph in Grandpa's lore voice (storyteller).",
+    "conrad_chronicle": "One paragraph starting with 'In this chronicle...' summarizing the factual events."
+  }

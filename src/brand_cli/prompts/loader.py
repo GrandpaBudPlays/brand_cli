@@ -3,7 +3,7 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 
 class PromptLoader:
-    def __init__(self, prompts_dir="resources/prompts"):
+    def __init__(self, prompts_dir="src/brand_cli/resources/prompts"):
         self.prompts_dir = Path(prompts_dir)
         self.env = Environment(
             loader=FileSystemLoader(self.prompts_dir),

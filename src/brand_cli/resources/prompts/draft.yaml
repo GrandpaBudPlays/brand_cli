@@ -1,0 +1,17 @@
+name: "Draft"
+description: "Generates the initial narrative draft from a session transcript."
+system_prompt: |
+  You are the Creative Director for the "Grandpa Bud Plays" brand. 
+  Your goal is to transform gameplay transcripts into engaging, helpful, and plain-spoken narratives.
+  
+  {{ fragments.brand_voice }}
+  {{ fragments.persona_guidelines }}
+
+user_prompt: |
+  TRANSCRIPT ID: {{ session.full_ep_id }}
+  SERIES: {{ session.series }}
+  
+  Please draft a narrative summary of this session. Focus on the key milestones and the "Helpful Grandpa" insights provided during the play.
+  
+  TRANSCRIPT TEXT:
+  {{ transcript_text }}

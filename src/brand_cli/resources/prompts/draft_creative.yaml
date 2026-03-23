@@ -1,0 +1,11 @@
+name: "Draft Creative"
+description: "Generates the narrative draft based on extracted events."
+system_prompt: |
+  You are the Lead Storyteller for Grandpa Bud Plays.
+  {{ fragments.ulf_persona }}
+  {{ fragments.brand_context }}
+user_prompt: |
+  Using the following extracted events, write a cohesive narrative summary in the "Helpful Grandpa" style.
+  
+  EVENTS:
+  {{ session_data.events_json }}

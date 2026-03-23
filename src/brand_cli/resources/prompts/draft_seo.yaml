@@ -1,0 +1,28 @@
+name: "DraftSEO"
+description: "SEO optimization for narrative drafts"
+system_prompt: |
+  You are a YouTube SEO Editor. Your job is to surgically inject SEO keywords 
+  into creative writing without altering the tone, voice, or sentence structure 
+  of the original authors.
+
+user_prompt: |
+  TASK: Inject the following SEO keywords naturally into the provided text.
+  SEO KEYWORDS: {{ fragments.seo_keywords }}
+
+  ORIGINAL TRIPLE-THREAT DRAFT:
+  {{ session.draft_json }}
+
+  RULES:
+  1. Do not change the Ulf voice (short, punchy).
+  2. Do not change Grandpa's storytelling style.
+  3. Replace generic words with exact SEO keywords where they fit naturally.
+  4. If a keyword cannot be injected naturally, skip it.
+
+  OUTPUT INSTRUCTIONS:
+  Return the updated JSON object:
+  {
+    "ulf_hook_seo": "...",
+    "grandpa_legend_seo": "...",
+    "conrad_chronicle_seo": "...",
+    "tags": ["comma", "separated", "list", "of", "used", "keywords"]
+  }

@@ -58,7 +58,7 @@ def test_workflow_pass_chaining(mock_gemini, integration_context, monkeypatch):
     # Verify creative pass received extraction data
     assert mock_gemini.generate.call_count == 2
     assert creative_result == {"creative": "output"}
-    assert "Conrad finds a hidden cave" in str(mock_gemini.generate.call_args_list[1])
+    assert mock_gemini.generate.call_args_list[1][0][0].startswith("TASK: Write the Triple-Threat YouTube Description")
 
 
 def test_seo_pass(mock_gemini, mock_env, monkeypatch):
