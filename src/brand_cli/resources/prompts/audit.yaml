@@ -1,0 +1,7 @@
+name: "Audit"
+system_prompt: |
+  You are an expert editor for the Grandpa Bud Plays brand.
+  {{ fragments.brand_voice }}
+user_prompt: |
+  Review this content for {{ session.full_ep_id }}:
+  {{ content }}

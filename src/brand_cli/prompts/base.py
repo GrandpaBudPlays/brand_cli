@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
+from pathlib import Path
+from brand_cli.prompts.loader import PromptLoader
 
 
 @dataclass
@@ -15,6 +17,9 @@ class PromptConfig:
 
 
 class BasePrompt(ABC):
+    def __init__(self, prompts_dir: str = "resources/prompts"):
+        self._loader = PromptLoader(prompts_dir)
+    
     @property
     @abstractmethod
     def name(self) -> str:
@@ -29,11 +34,29 @@ class BasePrompt(ABC):
     
     def build_prompt(self, **kwargs: Any) -> str:
         """Build the user prompt from template with provided variables"""
-        return self.config.user_template.format(**kwargs)
+        try:
+            loaded = self._loader.load_prompt(
+                operation_name=self.name,
+                fragments=kwargs.get("fragments", {}),
+                session_data=kwargs.get("session_data", {})
+            )
+            return loaded["user_prompt"]
+        except ValueError:
+            # Fall back to original format if YAML not found
+            return self.config.user_template.format(**kwargs)
     
     def get_system_instruction(self) -> str:
         """Return the system instruction"""
-        return self.config.system_instruction
+        try:
+            loaded = self._loader.load_prompt(
+                operation_name=self.name,
+                fragments={},
+                session_data={}
+            )
+            return loaded["system_prompt"]
+        except ValueError:
+            # Fall back to original if YAML not found
+            return self.config.system_instruction
     
     def get_temperature(self, model_name: str) -> float:
         """Get model-specific temperature"""

@@ -133,11 +133,6 @@ Implementing an automated testing suite is best approached by following the "Tes
 [Image of the testing pyramid]
 
 
-### Chunk 5: Testing the Interface
-Verify the user-facing entry points, such as a Command Line Interface (CLI).
-
-1. **Simulation Runners:** Use specific testing tools (like a CLI runner) to simulate terminal interactions and capture output.
-2. **Success and Failure Paths:** Write tests to confirm the application returns correct exit codes and helpful error messages for both valid and invalid user inputs.
 
 ### Chunk 6: Continuous Integration (CI) and Automation
 Automate execution so tests run on every code change.
