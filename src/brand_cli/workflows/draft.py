@@ -40,15 +40,18 @@ class DraftWorkflow(Workflow):
         base_dir = Path(context.transcript_path).parent
         hints = read_file(str(base_dir / "hints.txt")) or ""
         
-        prompt_gen = DraftExtractionPrompt()
+        prompt_gen = DraftExtractionPrompt(context, model)
         prompt_text = prompt_gen.build_extraction_prompt(hints)
 
         # Uses helper to handle transcript upload/deletion
         result = self._generate_with_transcript(prompt_text, prompt_gen, context, model)
         
         # Save raw JSON for Pass 2 to consume
-        self._process_json_result(result, context, "Extraction")
+        data = self._process_json_result(result, context, "Extraction")
         
+        # Use the helper to ensure Extraction.json exists
+        self._save_extraction_data(data, context)
+
         print(f"\nPass 1 Complete! Review Extraction.json in {base_dir}")
         print("To continue to Pass 2 (Creative Writing), run with '--continue'")
 
@@ -187,3 +190,22 @@ class DraftWorkflow(Workflow):
         md += "## 🏷️ SEO & Metadata\n"
         md += f"**Injected Tags:** {', '.join(tags)}" if tags else "*No SEO injection performed.*"
         return md
+    
+    def _save_extraction_data(self, data: dict, context: WorkflowContext) -> None:
+        """Saves a clean Extraction.json and a tracked audit version."""
+        import json
+        base_dir = Path(context.transcript_path).parent
+        extraction_path = base_dir / "Extraction.json"
+
+        # 1. Save the clean version for Pass 2 to find
+        with open(extraction_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+
+        # 2. Optional: Still call the audit saver if you want the history 
+        # but this is where you could "strip" the name as requested.
+        save_audit_report(
+            context.transcript_path, 
+            json.dumps(data, indent=2), 
+            "Extraction", 
+            "raw" # Replaces the model name with a generic string
+        )

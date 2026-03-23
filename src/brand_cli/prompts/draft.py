@@ -22,9 +22,7 @@ Return a JSON object:
     {{"time": "MM:SS", "fact": "Conrad mined copper", "importance": "high/medium/low"}}
   ]
 }}
-
-TRANSCRIPT:
-{transcript}""",
+""",
             temperature=0.1
         )
 
