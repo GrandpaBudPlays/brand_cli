@@ -79,6 +79,7 @@ class DraftWorkflow(Workflow):
             return
 
         # 1. Creative Pass
+        self.logger.info(f"Loading extraction data from {extraction_path}")
         events_json = read_file(str(extraction_path))
         draft_data, creative_model = self._run_creative_pass(context, model, events_json)
         
@@ -159,42 +160,30 @@ class DraftWorkflow(Workflow):
 
     # --- Shared Helpers ---
 
+    def _load_file_with_logging(self, path: str, file_name: str, description: str) -> str:
+        """Helper to load a file and log success/failure."""
+
+        file_path = str(path / file_name)
+        content = read_file(file_path)
+        if content:
+            self.logger.info(f"Loaded {description} from {file_path}")
+        else:
+            self.logger.error(f"{description} not found at {file_path}")
+        return content or ""
+
     def _load_brand_assets(self, base_dir: Path) -> Dict[str, str]:
         """Climbs the directory tree to find Ulf's Persona, the Protocol, and Brand Context."""
         # Chronicles-Of-The-Exile (Arc level)
-        arc_dir = base_dir.parent
-        # 010-Valheim (Saga level)
-        saga_dir = arc_dir.parent
-        # Content Root (.brand_context level)
-        root_dir = saga_dir.parent 
+        arc_dir = base_dir.parent.parent
 
-        ulf_path = str(arc_dir / "Ulf Persona.md")
-        protocol_path = str(saga_dir / "Descriptions.md")
-        brand_path = str(saga_dir / ".brand_context")
-
-        ulf_content = read_file(ulf_path)
-        protocol_content = read_file(protocol_path)
-        brand_content = read_file(brand_path)
-
-        if ulf_content:
-            self.logger.info(f"Loaded Ulf Persona from {ulf_path}")
-        else:
-            self.logger.error(f"Ulf Persona not found at {ulf_path}")
-
-        if protocol_content:
-            self.logger.info(f"Loaded Descriptions Protocol from {protocol_path}")
-        else:
-            self.logger.error(f"Descriptions Protocol not found at {protocol_path}")
-
-        if brand_content:
-            self.logger.info(f"Loaded Brand Context from {brand_path}")
-        else:
-            self.logger.error(f"Brand Context not found at {brand_path}")
+        ulf_content = self._load_file_with_logging(arc_dir, "Ulf Persona.md", "Ulf Persona")
+        protocol_content = self._load_file_with_logging(arc_dir.parent, "Descriptions.md", "Descriptions Protocol")
+        brand_content = self._load_file_with_logging(arc_dir.parent.parent, ".brand_context", "Brand Context")
 
         return {
-            "ulf": ulf_content or "",
-            "protocol": protocol_content or "",
-            "brand": brand_content or ""
+            "ulf": ulf_content,
+            "protocol": protocol_content,
+            "brand": brand_content
         }
 
     def _generate_with_transcript(self, prompt: str, loader: PromptLoader, context: WorkflowContext, model: GeminiModel):
