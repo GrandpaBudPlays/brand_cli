@@ -47,17 +47,19 @@ class DraftWorkflow(Workflow):
         hints = read_file(str(base_dir / "hints.txt")) or ""
         
         loader = PromptLoader()
-        prompt_text = loader.load_prompt(
-            "draft_extraction",
+
+        # Uses helper to handle transcript upload/deletion
+        result = self._generate_with_transcript(
+            "draft_extraction", 
+            loader, 
+            context, 
+            model,
             fragments={"hints": hints},
             session_data={
                 "episode_id": context.full_ep_id,
                 "lexicon": context.lexicon
             }
-        )["user_prompt"]
-
-        # Uses helper to handle transcript upload/deletion
-        result = self._generate_with_transcript(prompt_text, loader, context, model)
+        )
         
         # Save raw JSON for Pass 2 to consume
         data = self._process_json_result(result, context, "Extraction")
@@ -186,7 +188,7 @@ class DraftWorkflow(Workflow):
             "brand": brand_content
         }
 
-    def _generate_with_transcript(self, prompt: str, loader: PromptLoader, context: WorkflowContext, model: GeminiModel):
+    def _generate_with_transcript(self, template_name: str, loader: PromptLoader, context: WorkflowContext, model: GeminiModel, session_data: Dict[str, Any] = None, fragments: Dict[str, Any] = None):
         """Standardizes the temporary upload and cleanup of the transcript file."""
         file_obj = None
         try:
@@ -195,12 +197,12 @@ class DraftWorkflow(Workflow):
                 display_name=f"TS_{context.full_ep_id}"
             )
             prompt_data = loader.load_prompt(
-                "draft_extraction",
-                fragments={"hints": ""},
-                session_data={"episode_id": context.full_ep_id}
+                template_name,
+                session_data=session_data,
+                fragments=fragments
             )
             return model.generate(
-                prompt,
+                prompt_data["user_prompt"],
                 system_instruction=prompt_data["system_prompt"],
                 temperature=0.4,
                 response_mime_type="application/json",
@@ -241,15 +243,8 @@ class DraftWorkflow(Workflow):
         base_dir = Path(context.transcript_path).parent
         extraction_path = base_dir / "Extraction.json"
 
-        # 1. Save the clean version for Pass 2 to find
+        # Save the clean version for Pass 2 to find
         with open(extraction_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
 
-        # 2. Optional: Still call the audit saver if you want the history 
-        # but this is where you could "strip" the name as requested.
-        save_audit_report(
-            context.transcript_path, 
-            json.dumps(data, indent=2), 
-            "Extraction", 
-            "raw" # Replaces the model name with a generic string
-        )
+    

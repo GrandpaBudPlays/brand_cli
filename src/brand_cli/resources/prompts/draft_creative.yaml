@@ -16,10 +16,12 @@ system_prompt: |
   3. CONRAD'S CHRONICLE: A factual, slightly dry record-keeping summary.
 
 user_prompt: |
+  GUIDANCE: "Integrate 3-4 specific facts from events_json like specific items crafted or locations found"
+  
   TASK: Using the following JSON events, generate the narrative sections.
   
   EVENTS:
-  {{ session_data.events_json }}
+  {{ session.events_json }}
 
   OUTPUT INSTRUCTIONS:
   Return ONLY a JSON object with this exact structure:

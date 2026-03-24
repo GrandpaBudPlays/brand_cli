@@ -133,3 +133,72 @@ def test_main_error_handling(mocker):
     mock_exit.assert_called_once_with(1)
     mock_workflow.execute.assert_not_called()
     mock_exit.assert_called_with(1)
+
+
+def test_draft_workflow_skip_upload_when_pass_not_1(mocker):
+    """Test upload skipped when workflow is draft and DRAFT_PASS != 1"""
+    mocker.patch("brand_cli.Brand.load_dotenv")
+    mocker.patch.dict("os.environ", {"DRAFT_PASS": "2"})
+    mocker.patch("brand_cli.Brand.parse_cli_args",
+                return_value=MagicMock(
+                    operation="draft",
+                    session_id="S01E05",
+                    season="01",
+                    episode="05"))
+
+    # Mock session without is_draft_continue
+    mock_session = MagicMock(
+        full_ep_id="S01E05",
+        transcript_path="/valid/path",
+        duration=1800.0
+    )
+    mocker.patch("brand_cli.Brand.prepare_session_assets", return_value=mock_session)
+    
+    # Correct os.getenv mock with default parameter
+    mocker.patch("os.getenv", 
+                side_effect=lambda k, default=None: "2" if k == "DRAFT_PASS" else default)
+    
+    mock_gemini = MagicMock()
+    mocker.patch("brand_cli.Brand.GeminiModel", return_value=mock_gemini)
+    
+    mock_workflow = MagicMock()
+    mocker.patch("brand_cli.Brand.get_workflow", return_value=mock_workflow)
+    
+    main()
+    
+    mock_gemini.upload_file.assert_not_called()
+    mock_workflow.execute.assert_called_once()
+
+
+def test_draft_workflow_upload_when_pass_1(mocker):
+    """Test upload occurs when workflow is draft and DRAFT_PASS == 1"""
+    mocker.patch("brand_cli.Brand.load_dotenv")
+    mocker.patch.dict("os.environ", {"DRAFT_PASS": "1"})
+    mocker.patch("brand_cli.Brand.parse_cli_args",
+                return_value=MagicMock(
+                    operation="draft",  # Uppercase D to match registry
+                    session_id="S01E05",
+                    season="01",
+                    episode="05"))
+
+    mock_session = MagicMock(
+        full_ep_id="S01E05",
+        transcript_path="/valid/path",
+        duration=1800.0
+    )
+    mocker.patch("brand_cli.Brand.prepare_session_assets", return_value=mock_session)
+    
+    mock_gemini = MagicMock()
+    mocker.patch("brand_cli.Brand.GeminiModel", return_value=mock_gemini)
+    
+    # Mock the workflow registry
+    mock_workflow = MagicMock()
+    mocker.patch("brand_cli.Brand.get_workflow", return_value=mock_workflow)
+    
+    main()
+    
+    mock_gemini.upload_file.assert_called_once_with(
+        file_path="/valid/path",
+        display_name="Transcript_S01E05"
+    )
+    mock_workflow.execute.assert_called_once()

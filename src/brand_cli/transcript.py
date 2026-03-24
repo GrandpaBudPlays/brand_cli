@@ -10,7 +10,6 @@ class Transcript:
         """Initialize with raw content instead of file path"""
         self._content = raw_content
         self.episode_id = episode_id
-        self.file_id: Optional[str] = None
 
     def _has_no_audio(self) -> bool:
         if not self._content:
@@ -55,18 +54,3 @@ class Transcript:
     def get_video_duration(self) -> float:
         final_ts = self.get_last_timestamp()
         return self.timestamp_to_seconds(final_ts)
-
-    def ensure_uploaded(self, model: GeminiModel, temp_path: str) -> str:
-        """Uploads content via temporary file"""
-        if self.file_id is None:
-            logging.info(f"Uploading transcript to Gemini: {self.episode_id}")
-            with open(temp_path, 'w', encoding='utf-8') as f:
-                f.write(self._content)
-            uploaded_file = model.upload_file(temp_path)
-            os.remove(temp_path)
-            if not uploaded_file or not uploaded_file.name:
-                raise ValueError(f"Failed to upload transcript: {self.episode_id}")
-            self.file_id = uploaded_file.name
-        if not self.file_id:
-            raise ValueError("File ID not available after upload")
-        return self.file_id

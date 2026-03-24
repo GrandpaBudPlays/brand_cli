@@ -6,11 +6,11 @@ from brand_cli.workflows.describe import DescribeWorkflow
 from brand_cli.workflows.draft import DraftWorkflow
 
 WORKFLOWS = {
-    "Feedback": FeedbackWorkflow,
-    "Gold": GoldWorkflow,
-    "Audit": AuditWorkflow,
-    "Describe": DescribeWorkflow,
-    "Draft": DraftWorkflow
+    "feedback": FeedbackWorkflow,
+    "gold": GoldWorkflow,
+    "audit": AuditWorkflow,
+    "describe": DescribeWorkflow,
+    "draft": DraftWorkflow
 }
 
 def get_workflow(operation_name: str) -> Workflow:

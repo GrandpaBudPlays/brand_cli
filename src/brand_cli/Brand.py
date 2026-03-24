@@ -1,6 +1,7 @@
 import os
 import sys
 from dotenv import load_dotenv
+from requests import session
 
 # Updated to use package-absolute imports for the CLI entry point
 from brand_cli.config import CONFIG, CONTEXT
@@ -34,10 +35,12 @@ def main():
     session = prepare_session_assets(args)
 
     print(f"--- Processing (Operation: {operation}) on {session.full_ep_id}  ---")
-    
+    is_draft_continue = (operation == "draft" and os.getenv("DRAFT_PASS") != "1")
+    needs_upload = session and session.transcript_path and not is_draft_continue
+
     try:
         gemini_model = GeminiModel()
-        if session and session.transcript_path:
+        if needs_upload:
             print(f"Uploading transcript to Gemini: {session.transcript_path}")
             session.uploaded_file = gemini_model.upload_file(
                 file_path=session.transcript_path,
