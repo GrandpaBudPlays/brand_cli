@@ -108,6 +108,8 @@ class DraftWorkflow(Workflow):
         assets = self._load_brand_assets(base_dir)
         
         loader = PromptLoader()
+        print(f"DEBUG: events_json length: {len(events_json)}")
+        print(f"DEBUG: First 100 chars: {events_json[:100]}")
         prompt_data = loader.load_prompt(
             "draft_creative",
             fragments={
@@ -121,6 +123,10 @@ class DraftWorkflow(Workflow):
             }
         )
         prompt = prompt_data["user_prompt"]
+        
+        print("--- FULL RENDERED USER PROMPT ---")
+        print(prompt_data["user_prompt"])
+        print("---------------------------------")
         
         result = model.generate(
             prompt,
@@ -225,7 +231,7 @@ class DraftWorkflow(Workflow):
         chronicle = final_data.get("conrad_chronicle_seo", final_data.get("conrad_chronicle", draft_data.get("conrad_chronicle", "")))
         tags = final_data.get("tags", [])
 
-        md = f"# 📝 Triple-Threat Description: S{context.season} E{context.episode}\n\n"
+        md = f"# 📝 Triple-Threat Description: {context.season} {context.episode}\n\n"
         md += "## 🪓 The Narrative\n\n"
         md += f"**[Ulf's Voice]**\n{ulf}\n\n"
         md += f"**[Grandpa's Legend]**\n{legend}\n\n"

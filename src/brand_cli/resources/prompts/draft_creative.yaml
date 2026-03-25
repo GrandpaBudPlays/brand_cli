@@ -1,5 +1,7 @@
 name: "Draft Creative"
 description: "Generates the narrative draft based on the Triple-Threat persona protocol."
+# Note: Creative is overridden with the game spefic version of the prompt. This is the "default" that will be used for any game that doesn't have a custom one.
+# see games/valheim.yaml for the custom version that is used for Valheim.
 system_prompt: |
   You are the Lead Storyteller for "Grandpa Bud Plays." 
   
@@ -12,17 +14,28 @@ system_prompt: |
   YOUR GOAL:
   Transform factual game events into a three-part narrative using these specific voices:
   1. ULF'S HOOK: A short, gritty, in-character teaser from a Viking warrior's perspective.
-  2. GRANDPA'S LEGEND: A warm, encouraging, "Helpful Grandpa" summary of what happened.
-  3. CONRAD'S CHRONICLE: A factual, slightly dry record-keeping summary.
+  2. GRANDPA'S LEGEND: A warm, encouraging, "Helpful Grandpa" summary of what happened. 
+  Grandpa speaks in lore terminology and avoids gamer speak.
+  3. CONRAD'S CHRONICLE: A factual, slightly dry record-keeping summary. Conrad speaks in 
+  game terminology and focuses on the "what" rather than the "why" or "how."
 
 user_prompt: |
-  GUIDANCE: "Integrate 3-4 specific facts from events_json like specific items crafted or locations found"
-  
-  TASK: Using the following JSON events, generate the narrative sections.
-  
-  EVENTS:
+  CRITICAL DATA MAPPING:
+  You must incorporate the following specific milestones from the EVENTS JSON into the narratives:
+  - The most important Crafting/Discovery event (Importance: High)
+  - The most significant Combat/Encounter (Importance: High)
+  - The primary Construction project mentioned.
+
+  STRICT CONSTRAINTS:
+  1. No Hallucinations: If the JSON says "Crude Bow," do not say "Longbow." If it says "Troll," do not say "Dragon."
+  2. Fact Density: Each voice (Ulf, Grandpa, Conrad) must mention at least 2 specific facts from the JSON.
+  3. No Vague Fillers: Avoid generic phrases like "resources were gathered" or "the journey begins." Use the actual events.
+
+  EVENTS TO TRANSFORM:
   {{ session.events_json }}
 
+  TASK: Generate the JSON object for Ulf, Grandpa, and Conrad using these specific facts.
+  
   OUTPUT INSTRUCTIONS:
   Return ONLY a JSON object with this exact structure:
   {
