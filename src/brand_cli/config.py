@@ -3,7 +3,7 @@ import os
 import pathlib
 
 DEFAULT_CONFIG_PATH = pathlib.Path.cwd() / "brand_config.json"
-CONTEXT_FILE_PATH = pathlib.Path.cwd() / ".brand_context"
+CONTEXT_FILE_PATH = pathlib.Path.cwd() / ".series_metadata"
 
 DEFAULT_CONFIG = {
     "archive": {

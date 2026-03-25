@@ -38,7 +38,7 @@ def mock_env(tmp_path):
     (tmp_path / "audits").mkdir(parents=True, exist_ok=True)
     
     # Create context file
-    context_file = tmp_path / ".brand_context"
+    context_file = tmp_path / ".series_metadata"
     context_file.write_text("test_context")
     
     return tmp_path

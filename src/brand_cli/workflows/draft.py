@@ -113,7 +113,7 @@ class DraftWorkflow(Workflow):
         prompt_data = loader.load_prompt(
             "draft_creative",
             fragments={
-                "brand_context": assets['brand'],
+                "series_metadata": assets['brand'],
                 "ulf_persona": assets['ulf'],
                 "descriptions_protocol": assets['protocol']
             },
@@ -186,7 +186,7 @@ class DraftWorkflow(Workflow):
 
         ulf_content = self._load_file_with_logging(arc_dir, "Ulf Persona.md", "Ulf Persona")
         protocol_content = self._load_file_with_logging(arc_dir.parent, "Descriptions.md", "Descriptions Protocol")
-        brand_content = self._load_file_with_logging(arc_dir.parent.parent, ".brand_context", "Brand Context")
+        brand_content = self._load_file_with_logging(arc_dir.parent.parent, ".series_metadata", "Series Metadata")
 
         return {
             "ulf": ulf_content,

@@ -55,7 +55,7 @@ Implementation models must strictly adhere to the following:
 * **Language:** Python 3.10+ with strict Type Hinting.  
 * **Dependency Injection:** Classes (Workflow, Fragment, Client) must be instantiated with their dependencies to allow for unit testing.  
 * **Error Handling:** "Fail Forward" policy. If a fragment or file is missing, the tool must output a clear error string within the generated document rather than crashing.  
-* **Stateless Code/Stateful Data:** The code itself remains stateless; all environmental awareness must come from `brand_config.json` or `.brand_context`.
+* **Stateless Code/Stateful Data:** The code itself remains stateless; all environmental awareness must come from `brand_config.json` or `.series_metadata`.
 
 ---
 

@@ -102,7 +102,7 @@ Create a `brand_config.json` file to point the CLI to your specific content arch
 brand_cli features a **stateful context** so you can work friction-free. 
 
 ### 1. Set Your Context
-First, tell the CLI what part of the archive you are working on. This is saved to a local hidden `.brand_context` file.
+First, tell the CLI what part of the archive you are working on. This is saved to a local hidden `.series_metadata` file.
 
 ```bash
 brand Context --ip "Valheim" --series "Chronicles" --season "Saga I"
@@ -125,7 +125,7 @@ brand Audit "Saga I" E005
 
 | Operation | Description | Output |
 | :--- | :--- | :--- |
-| **`Context`** | Sets or clears the active stateful session (`--ip`, `--series`, `--season`). | `.brand_context` file |
+| **`Context`** | Sets or clears the active stateful session (`--ip`, `--series`, `--season`). | `.series_metadata` file |
 | **`Audit`** | Runs both `Feedback` and `Gold` operations sequentially. | Both Audit & Gold `.md` and `.json` files. |
 | **`Feedback`** | Generates a tactical audit of the stream (pacing, filler words, brand rules). | `Audit.md` |
 | **`Gold`** | Extracts strategic highlights (Shorts, Clips, Montages, Chapters). | `Gold.md` |
@@ -142,7 +142,7 @@ brand Audit "Saga I" E005
 brand_cli/
 ├── pyproject.toml             # Project configuration and entry points
 ├── .env                       # API keys (Gemini/OpenAI) - DO NOT COMMIT
-├── .brand_context             # Stateful context for the assembly engine
+├── .series_metadata             # Stateful context for the assembly engine
 ├── src/
 │   └── brand_cli/             # Main package directory
 │       ├── Brand.py           # Application entry point (main loop)

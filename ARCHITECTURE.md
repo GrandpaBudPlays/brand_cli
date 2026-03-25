@@ -22,7 +22,7 @@ The archive structure follows professional Media Asset Management standards. The
 
 ## 3. Stateful Context (Zero Fatigue CLI)
 To prevent users from typing long directory paths or specifying the IP/Series on every command, the CLI is *stateful*.
-* **The `.brand_context` File:** The `Context` command writes the user's current focus (IP, Series, Season) to a hidden local file. 
+* **The `.series_metadata` File:** The `Context` command writes the user's current focus (IP, Series, Season) to a hidden local file. 
 * **Implicit Resolution:** Operations like `Audit E001` automatically read the context file to know exactly where to look.
 * **Graceful Fallbacks:** If the context is empty, the `file_manager` performs a full-archive search. If collisions occur (e.g., multiple "E001" files exist across different IPs), it safely aborts and asks the user to narrow their context.
 

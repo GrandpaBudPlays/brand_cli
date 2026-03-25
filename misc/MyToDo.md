@@ -41,7 +41,7 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
 
 4. **Philosophy:**
    - Agnostic & Decoupled: The engine doesn't care if the content is Valheim or Tech Tutorials.
-   - Zero Fatigue: Automatic path resolution based on `.brand_context`.
+   - Zero Fatigue: Automatic path resolution based on `.series_metadata`.
 
 ### Implementation Notes
 
@@ -70,13 +70,13 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
 
 ### Long Term Changes
 #### Phase 4: Optimization (Back Burner)
-* Research long-term persistent File IDs and custom TTL logic in `.brand_context`. Do we want to have the file live in google longer so we can run back tasks at another time?
+* Research long-term persistent File IDs and custom TTL logic in `.series_metadata`. Do we want to have the file live in google longer so we can run back tasks at another time?
 
 
   ### ⚠️ Brand-CLI Architectural Risks & Considerations
 
 * **Context Ambiguity (Section 3):** * *Risk:* Full-archive crawls on context-less commands (e.g., `Audit E001`) may lead to performance lag or "False Positive" collisions across different IPs.
-    * *Mitigation:* Implement a "Did you mean?" fuzzy search or a LRU (Least Recently Used) cache for the `.brand_context`.
+    * *Mitigation:* Implement a "Did you mean?" fuzzy search or a LRU (Least Recently Used) cache for the `.series_metadata`.
 
 * **Atomic Migration Failures (Section 5):**
     * *Risk:* Interruptions during "Inbox to Bundle" auto-migration could result in "Partial Bundles" (e.g., folder created, but files not moved), causing downstream AI analysis to fail or hallucinate.
