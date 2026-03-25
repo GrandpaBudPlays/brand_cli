@@ -108,14 +108,14 @@ class DraftWorkflow(Workflow):
         assets = self._load_brand_assets(base_dir)
         
         loader = PromptLoader()
-        print(f"DEBUG: events_json length: {len(events_json)}")
-        print(f"DEBUG: First 100 chars: {events_json[:100]}")
         prompt_data = loader.load_prompt(
             "draft_creative",
             fragments={
-                "series_metadata": assets['brand'],
+                "series_metadata": assets['series'],
                 "ulf_persona": assets['ulf'],
-                "descriptions_protocol": assets['protocol']
+                "descriptions_protocol": assets['protocol'],
+                "lexicon": assets['lexicon'],
+                "grandpa_voice": assets['grandpa'] 
             },
             session_data={
                 "game": "valheim",
@@ -123,11 +123,7 @@ class DraftWorkflow(Workflow):
             }
         )
         prompt = prompt_data["user_prompt"]
-        
-        print("--- FULL RENDERED USER PROMPT ---")
-        print(prompt_data["user_prompt"])
-        print("---------------------------------")
-        
+            
         result = model.generate(
             prompt,
             system_instruction=prompt_data["system_prompt"],
@@ -183,15 +179,26 @@ class DraftWorkflow(Workflow):
         """Climbs the directory tree to find Ulf's Persona, the Protocol, and Brand Context."""
         # Chronicles-Of-The-Exile (Arc level)
         arc_dir = base_dir.parent.parent
+        # Stream-Archive is the root of the archive
+        archive_root = arc_dir.parent.parent
+        # 000-Global-Core with the Brand Voice and other assets
+        global_core_dir = archive_root / "000-Global-Core"
+        # ip_root - all valhiem assets
+        ip_root = arc_dir.parent
 
+
+        grandpa_content = self._load_file_with_logging(global_core_dir, "Brand-Voice.md", "Grandpa")
+        protocol_content = self._load_file_with_logging(ip_root, "Descriptions.md", "Descriptions Protocol")
+        lexicon_content = self._load_file_with_logging(ip_root, "Saga-Lexicon-Valheim.md", "Lexicon")
         ulf_content = self._load_file_with_logging(arc_dir, "Ulf Persona.md", "Ulf Persona")
-        protocol_content = self._load_file_with_logging(arc_dir.parent, "Descriptions.md", "Descriptions Protocol")
-        brand_content = self._load_file_with_logging(arc_dir.parent.parent, ".series_metadata", "Series Metadata")
+        series_metadata = self._load_file_with_logging(archive_root, ".series_metadata", "Series Metadata")
 
         return {
             "ulf": ulf_content,
             "protocol": protocol_content,
-            "brand": brand_content
+            "series": series_metadata,
+            "lexicon": lexicon_content,
+            "grandpa": grandpa_content
         }
 
     def _generate_with_transcript(self, template_name: str, loader: PromptLoader, context: WorkflowContext, model: GeminiModel, session_data: Dict[str, Any] = None, fragments: Dict[str, Any] = None):

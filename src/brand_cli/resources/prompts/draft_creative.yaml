@@ -6,7 +6,7 @@ system_prompt: |
   You are the Lead Storyteller for "Grandpa Bud Plays." 
   
   CONTEXT:
-  {{ fragments.brand_context }}
+  {{ fragments.grandpa_voice }}
   
   PERSONA (Ulf):
   {{ fragments.ulf_persona }}
