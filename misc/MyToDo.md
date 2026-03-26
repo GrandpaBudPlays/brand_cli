@@ -1,7 +1,8 @@
 # TODO List
 # Priority One Changes
 - remove Transcript functions from file_manager, change all calls to Transcript.
-- find and remove all hard coded paths from file_manager
+- find and remove all hard coded paths from file_manager 
+   - use a one time search to create a dictionary of Global, IP, series, season, and episode directory names
 
 
 # Priority 2 Changes
@@ -23,6 +24,26 @@ Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly 
 - Does SessonData class belong in fileManager?
 - Can we change file_manager.load_transcript_asset to a more generic load_archive_asset
 
+--- 
+
+### Brand-CLI Refactoring: Generic Prompt Engine & Archive Overrides
+
+**Goal:** Implement a hierarchical prompt loading system that allows YAML files in the `Stream-Archive` to override system defaults.
+
+**Current Progress:**
+* **Draft Workflow:** Utilizing `PromptLoader` for extraction and creative passes.
+* **Loader Logic:** Basic game-specific override support is present but limited to the `resources` directory.
+
+**To-Do / High Priority:**
+* **Refactor `PromptLoader.load_prompt`:** * Implement directory "walk-up" logic starting from the current episode directory.
+    * Priority Order: Episode > Season > Series > IP > System Default.
+* **Implement Debug Logging:**
+    * Create a `manifest.log` or `process.log` in the episode folder.
+    * Log the provenance of every YAML file loaded during the workflow.
+* **Standardize Workflows:** * Migrate `Audit` and `Gold` workflows to use this new resolution logic.
+* **Performance Check:** * Benchmark the directory walking code to ensure it doesn't introduce lag as the archive grows.
+
+---
 
 ### 🏛️ Architectural Decisions
 1. **Hierarchy-First Resolution:** Files are resolved via a "bottom-up" search: 
@@ -121,6 +142,21 @@ The Python logic would then "include" these blocks as needed. This maintains the
 ### 5. Documentation and Schema Validation
 To ensure that users don't break the application when editing prompts, each prompt should have an associated schema. This can be as simple as a comment at the top of the YAML file listing the required variables. This turns the prompt files into a self-documenting interface, making it clear to the user exactly which data points are available for them to use in their custom instructions.
 
+
+---
+
+### Brand-CLI Refactoring: Generic Prompt Engine Migration
+
+**Goal:** Standardize all workflows to use the `PromptLoader` engine and YAML-based templates to eliminate redundant Python logic classes.
+
+**Current Progress:**
+* **Draft Workflow (Started):** Migration to `draft_extraction.yaml` and `draft_creative.yaml` is partially implemented within `src/brand_cli/workflows/draft.py`.
+* **Game Overrides:** Initial logic for handling game-specific templates like `src/brand_cli/resources/prompts/games/valheim.yaml` is functioning in the loader.
+
+**To-Do / Remaining Refactors:**
+* **Audit Workflow:** Migrate the logic and hard-coded templates currently in `src/brand_cli/prompts/audit.py` into the existing `src/brand_cli/resources/prompts/audit.yaml`.
+* **Gold Workflow:** Migrate the extraction logic currently defined in `src/brand_cli/prompts/gold_extraction.py` to a new YAML template.
+* **Cleanup:** Once the Audit and Gold workflows are verified using the new engine, remove the legacy prompt classes in `src/brand_cli/prompts/` and the base class in `src/brand_cli/prompts/base.py`.
 
 ---
 
