@@ -3,7 +3,7 @@ from brand_cli.fragments.base import Fragment
 import random
 import re
 
-class RandPlus(Fragment):
+class TextPlusRandom(Fragment):
     def __init__(self, raw_content: str, start_tag: str = "-Begin Random-"):
         super().__init__()
         self.raw_content = raw_content

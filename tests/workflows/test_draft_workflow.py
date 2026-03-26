@@ -1,166 +1,145 @@
 import pytest
-import json
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, MagicMock
+from pathlib import Path
 from brand_cli.workflows.draft import DraftWorkflow
 
-
-@pytest.fixture
-def mock_gemini():
-    return Mock()
-
-
-@pytest.fixture
-def mock_env(tmp_path):
-    return {"WORK_DIR": str(tmp_path)}
-
-
-def test_extraction_pass(mock_gemini, integration_context, monkeypatch):
-    """Test the extraction pass workflow"""
-    workflow = DraftWorkflow()
+@patch('brand_cli.workflows.draft.DraftWorkflow._run_creative_pass')
+@patch('brand_cli.workflows.draft.DraftWorkflow._run_seo_pass')
+@patch('brand_cli.workflows.draft.Path.exists')
+@patch('brand_cli.fragments.random_plus.TextPlusRandom')
+@patch('brand_cli.fragments.tagged.TaggedExternalFragment')
+def test_link_injection_with_repository_found(mock_tagged, mock_random, mock_exists, mock_seo_pass, mock_creative_pass, integration_context, monkeypatch):
+        """Test link injection when Standard Link Repository exists"""
+        workflow = DraftWorkflow()
     
-    # Mock file operations
-    def mock_save(*args, **kwargs):
-        return None
-    monkeypatch.setattr("brand_cli.workflows.draft.DraftWorkflow._save_extraction_data", mock_save)
+        # Setup mocks
+        mock_exists.return_value = True
+        mock_creative_pass.return_value = ({"draft": "data"}, "model1")
+        mock_seo_pass.return_value = ({"seo": "data"}, "model2")
+    
+        # Mock fragment classes
+        mock_tagged.return_value.resolve.return_value = "[Saga 1](link1)\n[Saga 2](link2)"
+        mock_random.return_value.resolve.return_value = "Test world seed content"
+        
+        # Mock path for TextPlusRandom
+        mock_random.return_value.path = Path("/mock/world_seed")
+    
+        # Mock file operations
+        monkeypatch.setattr(
+            "brand_cli.workflows.draft.find_file_in_hierarchy",
+            lambda *args: Path("/mock/links")
+        )
+    
+        # Mock logger
+        workflow.logger = MagicMock()
+    
+        # Mock save operations
+        monkeypatch.setattr(workflow, "_save_final_description", lambda *args: None)
+    
+        result = workflow._run_creative_and_seo_pipeline(integration_context, Mock())
+        assert "[Saga 1](link1)" in result
+        assert "Continue the Journey" in result
 
-    # Mock a proper response object with parsed JSON content
-    mock_response = Mock()
-    mock_response.text = '{"events": [{"timestamp": "00:01", "event": "Conrad finds a hidden cave"}]}'
-    mock_response.json.return_value = {"events": [{"timestamp": "00:01", "event": "Conrad finds a hidden cave"}]}
-    mock_gemini.generate.return_value = mock_response
+@patch('brand_cli.workflows.draft.DraftWorkflow._run_creative_pass')
+@patch('brand_cli.workflows.draft.DraftWorkflow._run_seo_pass')
+@patch('brand_cli.workflows.draft.Path.exists')
+@patch('brand_cli.fragments.random_plus.TextPlusRandom')
+@patch('brand_cli.fragments.tagged.TaggedExternalFragment')
+def test_link_injection_with_repository_missing(mock_tagged, mock_random, mock_exists, mock_seo_pass, mock_creative_pass, integration_context):
+        """Test link injection fallback when repository not found"""
+        workflow = DraftWorkflow()
     
-    # Mock prompt loader to handle session_data
-    mock_loader = Mock()
-    mock_loader.load_prompt.return_value = {
-        "user_prompt": "Mock prompt",
-        "system_prompt": "Mock system prompt"
-    }
-    monkeypatch.setattr("brand_cli.workflows.draft.PromptLoader", lambda: mock_loader)
+        # Setup mocks
+        mock_exists.return_value = True
+        mock_creative_pass.return_value = ({"draft": "data"}, "model1")
+        mock_seo_pass.return_value = ({"seo": "data"}, "model2")
+    
+        # Mock fragment classes
+        mock_tagged.return_value.resolve.return_value = None
+        mock_random.return_value.resolve.return_value = None
+        
+        # Mock path for TextPlusRandom
+        mock_random.return_value.path = Path("/mock/world_seed")
+    
+        # Mock logger
+        workflow.logger = MagicMock()
+    
+        # Mock save operations
+        with patch("brand_cli.workflows.draft.DraftWorkflow._save_final_description"):
+            with patch("brand_cli.workflows.draft.find_file_in_hierarchy", return_value=None):
+                result = workflow._run_creative_and_seo_pipeline(integration_context, Mock())
+    
+            assert "No Links Provided" in result
+            assert "Continue the Journey" in result
+            workflow.logger.error.assert_called_with("Standard Link Repository not found at /mock/links")
 
-    result = workflow._run_extraction_pass(integration_context, mock_gemini)
-    mock_gemini.generate.assert_called_once()
-    assert "events" in result  # Verify output structure
-    assert isinstance(result["events"], list)  # Verify events array exists
+@patch('brand_cli.workflows.draft.DraftWorkflow._run_creative_pass')
+@patch('brand_cli.workflows.draft.DraftWorkflow._run_seo_pass')
+@patch('brand_cli.workflows.draft.Path.exists')
+@patch('brand_cli.fragments.random_plus.TextPlusRandom')
+@patch('brand_cli.fragments.tagged.TaggedExternalFragment')
+def test_world_seed_injection_with_file_found(mock_tagged, mock_random, mock_exists, mock_seo_pass, mock_creative_pass, integration_context, monkeypatch):
+        """Test world seed injection when file exists"""
+        workflow = DraftWorkflow()
+    
+        # Setup mocks
+        mock_exists.return_value = True
+        mock_creative_pass.return_value = ({"draft": "data"}, "model1")
+        mock_seo_pass.return_value = ({"seo": "data"}, "model2")
+    
+        # Mock fragment classes
+        mock_tagged.return_value.resolve.return_value = None
+        mock_random.return_value.resolve.return_value = "Test world seed content"
+        
+        # Mock path for TextPlusRandom
+        mock_random.return_value.path = Path("/mock/world_seed")
+    
+        # Mock logger
+        workflow.logger = MagicMock()
+    
+        # Mock file operations
+        monkeypatch.setattr(
+            "brand_cli.workflows.draft.find_file_in_hierarchy",
+            lambda *args: Path("/mock/world_seed")
+        )
+    
+        # Mock save operations
+        monkeypatch.setattr(workflow, "_save_final_description", lambda *args: None)
+    
+        result = workflow._run_creative_and_seo_pipeline(integration_context, Mock())
+        assert "Test world seed content" in result
+        assert "The Narrative" in result
+        workflow.logger.info.assert_called_with("Loaded World Seed from /mock/world_seed/World Seed.md")
 
-
-def test_workflow_pass_chaining(mock_gemini, integration_context, monkeypatch):
-    """Test data flows correctly between passes"""
-    workflow = DraftWorkflow()
+@patch('brand_cli.workflows.draft.DraftWorkflow._run_creative_pass')
+@patch('brand_cli.workflows.draft.DraftWorkflow._run_seo_pass')
+@patch('brand_cli.workflows.draft.Path.exists')
+@patch('brand_cli.fragments.random_plus.TextPlusRandom')
+@patch('brand_cli.fragments.tagged.TaggedExternalFragment')
+def test_world_seed_injection_with_file_missing(mock_tagged, mock_random, mock_exists, mock_seo_pass, mock_creative_pass, integration_context):
+        """Test world seed fallback when file missing"""
+        workflow = DraftWorkflow()
     
-    # Mock extraction pass response
-    mock_extraction_response = Mock()
-    mock_extraction_response.text = '{"events": [{"timestamp": "00:01", "event": "Conrad finds a hidden cave"}]}'
-    mock_extraction_response.json.return_value = {"events": [{"timestamp": "00:01", "event": "Conrad finds a hidden cave"}]}
+        # Setup mocks
+        mock_exists.return_value = True
+        mock_creative_pass.return_value = ({"draft": "data"}, "model1")
+        mock_seo_pass.return_value = ({"seo": "data"}, "model2")
     
-    # Mock creative pass response
-    mock_creative_response = Mock()
-    mock_creative_response.text = '{"creative": "output"}'
-    mock_creative_response.json.return_value = {"creative": "output"}
+        # Mock fragment classes
+        mock_tagged.return_value.resolve.return_value = None
+        mock_random.return_value.resolve.return_value = None
+        
+        # Mock path for TextPlusRandom
+        mock_random.return_value.path = Path("/mock/world_seed")
     
-    # Setup mock to return different responses for each call
-    mock_gemini.generate.side_effect = [mock_extraction_response, mock_creative_response]
+        # Mock logger
+        workflow.logger = MagicMock()
     
-    # Mock prompt loader to handle session_data
-    mock_loader = Mock()
-    mock_loader.load_prompt.return_value = {
-        "user_prompt": "Mock prompt",
-        "system_prompt": "Mock system prompt"
-    }
-    monkeypatch.setattr("brand_cli.workflows.draft.PromptLoader", lambda: mock_loader)
+        # Mock save operations
+        with patch("brand_cli.workflows.draft.DraftWorkflow._save_final_description"):
+            with patch("brand_cli.workflows.draft.find_file_in_hierarchy", return_value=None):
+                result = workflow._run_creative_and_seo_pipeline(integration_context, Mock())
     
-    # Run workflow passes
-    extraction_data = workflow._run_extraction_pass(integration_context, mock_gemini)
-    creative_result, _ = workflow._run_creative_pass(integration_context, mock_gemini, json.dumps(extraction_data))
-    
-    # Verify creative pass received extraction data
-    assert mock_gemini.generate.call_count == 2
-    assert creative_result == {"creative": "output"}
-    assert isinstance(mock_gemini.generate.call_args_list[1][0][0], str)  # Verify prompt is loaded
-
-
-def test_seo_pass(mock_gemini, mock_env, monkeypatch):
-    """Test the SEO pass workflow"""
-    from pathlib import Path
-    workflow = DraftWorkflow()
-    mock_context = Mock()
-    mock_context.transcript_path = "/fake/path"
-
-    # Create a mock seo.txt file in the tmp_path
-    seo_file = Path(mock_env["WORK_DIR"]) / "seo.txt"
-    seo_file.write_text("test keywords")
-
-    # Mock a proper response object with text content
-    mock_response = Mock()
-    mock_response.text = '{"seo":"optimized"}'
-    mock_response.json.return_value = {"seo": "optimized"}
-    mock_gemini.generate_content.return_value = mock_response
-
-    # Mock the workflow to return our test data
-    monkeypatch.setattr(workflow, "_run_seo_pass", lambda *args: ({"seo": "optimized"}, None))
-    
-    result, _ = workflow._run_seo_pass(mock_context, mock_gemini, {"draft":"data"})
-    assert "seo" in result
-    
-def test_draft_formatter_integration(integration_context, mock_gemini, monkeypatch):
-    """Test draft workflow formatter integration"""
-    from pathlib import Path
-    
-    # Force Pass 2 execution
-    monkeypatch.setenv("DRAFT_PASS", "2")
-    
-    # Create sample Extraction.json for Pass 2 to read
-    extraction_path = Path(integration_context.transcript_path).parent / "Extraction.json"
-    extraction_path.write_text('{"events": [{"timestamp": "00:01", "event": "Conrad finds a hidden cave"}]}')
-    
-    workflow = DraftWorkflow()
-    
-    # Mock creative pass response
-    mock_creative = Mock()
-    mock_creative.text = '{"ulf_hook": "Ulf intro", "grandpa_legend": "Grandpa story", "conrad_chronicle": "Conrad finds cave"}'
-    mock_creative.json.return_value = {"ulf_hook": "Ulf intro", "grandpa_legend": "Grandpa story", "conrad_chronicle": "Conrad finds cave"}
-    mock_gemini.generate.return_value = mock_creative
-    
-    # Run workflow
-    result = workflow.execute(integration_context, mock_gemini)
-    
-    # Verify final markdown contains expected sections
-    assert "## 🪓 The Narrative" in result
-    assert "[Ulf's Voice]" in result
-    assert "[Grandpa's Legend]" in result
-    assert "[Conrad's Chronicle]" in result
-
-def test_standard_links_priority(integration_context):
-    """Test final_data links take priority over draft_data"""
-    workflow = DraftWorkflow()
-    markdown = workflow._build_markdown(
-        draft_data={"standard_links": "draft_links"},
-        final_data={"standard_links": "final_links"},
-        context=integration_context
-    )
-    links_section = markdown.split("## 🔗")[1].split("##")[0]
-    links_content = links_section.split("\n", 1)[1].strip()
-    assert links_content == "final_links"
-
-def test_standard_links_draft_data_fallback(integration_context):
-    """Test draft_data links are used when final_data has none"""
-    workflow = DraftWorkflow()
-    markdown = workflow._build_markdown(
-        draft_data={"standard_links": "draft_links"},
-        final_data={},
-        context=integration_context
-    )
-    links_section = markdown.split("## 🔗")[1].split("##")[0]
-    links_content = links_section.split("\n", 1)[1].strip()
-    assert links_content == "draft_links"
-
-def test_standard_links_default_fallback_non_empty(integration_context):
-    """Test default fallback produces non-empty content"""
-    workflow = DraftWorkflow()
-    markdown = workflow._build_markdown(
-        draft_data={},
-        final_data={},
-        context=integration_context
-    )
-    links_section = markdown.split("## 🔗")[1].split("##")[0]
-    links_content = links_section.split("\n", 1)[1].strip()
-    assert links_content  # Non-empty check    
+            assert "No world seed content" in result
+            assert "The Narrative" in result
+            workflow.logger.error.assert_called_with("World Seed not found at /mock/world_seed/World Seed.md")

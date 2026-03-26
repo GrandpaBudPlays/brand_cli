@@ -1,3 +1,7 @@
+## Items to prioritize and Organize
+Ability for the system to self diagnose. (very low priority, long range goals)
+
+
 ### **Part 1: The Prioritized Task Dashboard**
 
 | Priority | Task Label | Status | Brief Description |
@@ -48,3 +52,11 @@
 * **The 150-Character Hook:** First sentence must contain Game Title (Valheim) and Primary Biome/Entity.
 * **The Grandpa Anchor:** Always start the `[Grandpa's Legend]` section with: "I'm Grandpa and we're playing Valheim".
 * **Natural Flow:** Avoid metadata blocks at the top; keywords must feel like natural storytelling.
+
+
+
+
+
+
+>           assert "No world seed content" in result
+E           assert 'No world seed content' in "# 📝 Triple-Threat Description: 1 5\n\n## 🪓 The Narrative\n\n**[Ulf's Voice]**\n\n\n**[Grandpa's Legend]**\n\n\n**[Con...le]**\n\n\n---\n\n## 🔗 Continue the Journey\nNo Links Provided.\n\n## 🏷️ SEO & Metadata\n*No SEO injection performed.*"

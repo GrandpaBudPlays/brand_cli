@@ -8,6 +8,7 @@ from brand_cli.file_manager import save_audit_report, read_file, find_file_in_hi
 from brand_cli.prompts.loader import PromptLoader
 from brand_cli.workflows.base import Workflow
 from brand_cli.fragments.tagged import TaggedExternalFragment
+from brand_cli.fragments.random_plus import TextPlusRandom  
 
 
 if TYPE_CHECKING:
@@ -93,14 +94,22 @@ class DraftWorkflow(Workflow):
         # 2. SEO Pass (Optional)
         final_data, seo_model = self._run_seo_pass(context, model, draft_data)
 
+        # 3. Attempt to find and inject standard links with tagging.
         links_dir = find_file_in_hierarchy(Path(context.transcript_path), "Standard Link Repository.md")
         if links_dir:
             links_text = self._load_file_with_logging(links_dir, "Standard Link Repository.md", "Standard Link Repository")
             saga_tag = f"* **Saga {str(int(context.season.lstrip('S')))}"
             tagged_fragment = TaggedExternalFragment(links_text, saga_tag)
             final_data["standard_links"] = tagged_fragment.resolve() or "No standard links found for this season."
+
+        # 4. Attempt to find and inject the World Seed with randomization if needed.
+        seed_dir = find_file_in_hierarchy(Path(context.transcript_path), "World Seed.md")
+        if seed_dir:
+            seed_text = self._load_file_with_logging(Path(seed_dir), "World Seed.md", "World Seed")
+            seed_fragment = TextPlusRandom(seed_text)
+            final_data["world_seed"] = seed_fragment.resolve() or "No world seed found."
         
-        # 3. Final Assembly & Save
+        # 5. Final Assembly & Save
         # Use the name of the last model to successfully touch the data
         attribution_model = seo_model if seo_model else creative_model
         
