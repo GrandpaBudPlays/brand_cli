@@ -1,208 +1,50 @@
-# TODO List
-# Priority One Changes
-- remove Transcript functions from file_manager, change all calls to Transcript.
-- find and remove all hard coded paths from file_manager 
-   - use a one time search to create a dictionary of Global, IP, series, season, and episode directory names
+### **Part 1: The Prioritized Task Dashboard**
 
-
-# Priority 2 Changes
-## 🎯 Project Goal
-Implement a polymorphic "Fragment" engine for Brand-CLI to handle text assembly for both AI Prompts (prefixes/system instructions) and Final Output (suffixes/boilerplate).
-- convert draft to use the Random Fragment
-- Change Feedback, ask AI for the list of filler words. Count in python.
-
-# Priority 3 Changes
-- Review README.md, ARCHITECTURE.md, ./docs/brand_cli.md
-- Add ability to view the current context
-- Add ability to list available context settings (read the directory structure)
-- Modify AI class to use user defined API key env variable
-- Split find_transcript_and_metadata into two separate functions, find_transcript and Find Metadata. Change this function to call the two supporting functions.
-
- 
-# Priority 4 Changes
-- Modify Help to use defined terms for IP, Series, Season, Episode
-- Does SessonData class belong in fileManager?
-- Can we change file_manager.load_transcript_asset to a more generic load_archive_asset
-
---- 
-
-### Brand-CLI Refactoring: Generic Prompt Engine & Archive Overrides
-
-**Goal:** Implement a hierarchical prompt loading system that allows YAML files in the `Stream-Archive` to override system defaults.
-
-**Current Progress:**
-* **Draft Workflow:** Utilizing `PromptLoader` for extraction and creative passes.
-* **Loader Logic:** Basic game-specific override support is present but limited to the `resources` directory.
-
-**To-Do / High Priority:**
-* **Refactor `PromptLoader.load_prompt`:** * Implement directory "walk-up" logic starting from the current episode directory.
-    * Priority Order: Episode > Season > Series > IP > System Default.
-* **Implement Debug Logging:**
-    * Create a `manifest.log` or `process.log` in the episode folder.
-    * Log the provenance of every YAML file loaded during the workflow.
-* **Standardize Workflows:** * Migrate `Audit` and `Gold` workflows to use this new resolution logic.
-* **Performance Check:** * Benchmark the directory walking code to ensure it doesn't introduce lag as the archive grows.
+| Priority | Task Label | Status | Brief Description |
+| :--- | :--- | :--- | :--- |
+| **P1** | **Fragment Integration** | **IN PROGRESS** | Connect the existing `Fragment` classes to the `PromptLoader` and `WorkflowContext`. |
+| **P1** | **YAML Switchover** | **IN PROGRESS** | Point all workflows to the `PromptLoader` and delete legacy Python prompt classes. |
+| **P2** | **Metadata Split** | **PENDING** | Deconstruct `find_transcript_and_metadata` into atomic, single-purpose functions. |
+| **P2** | **Security & Config** | **PENDING** | Shift API key retrieval from hard-coded patterns to `os.environ` in `BaseAIModel`. |
+| **P3** | **Context Visibility** | **PENDING** | Add CLI commands to view current episode context and list available settings. |
+| **P4** | **UX & Terminology** | **PENDING** | Standardize internal MAM terms (IP, Series, Season, Episode) across the CLI. |
+| **P4** | **Documentation** | **PENDING** | Sync `README.md` and `ARCHITECTURE.md` with the new Fragment/YAML engine. |
 
 ---
 
-### 🏛️ Architectural Decisions
-1. **Hierarchy-First Resolution:** Files are resolved via a "bottom-up" search: 
-   Episode -> Season -> Series -> IP -> Global.
-   
-2. **Class Hierarchy (The Fragment Strategy):**
-   - **StaticFragment:** One-to-one file content retrieval.
-   - **RandomFragment:** Multi-section files; returns one random block (delimiter-based).
-   - **FlaggedFragment:** Key-value retrieval within a single file using `[TAGS]`.
-   - **CompositeFragment:** The "Chainer." Holds a list of other fragments to build complex strings (Recursive/Composite Pattern).
+### **Part 2: Detailed Implementation Notes**
 
-3. **Workflow Integration:**
-   - Fragments are "Dumb" (they don't know about the AI).
-   - The Workflow class is the "Orchestrator" that bundles these fragments.
-   - Fail-forward logic: Missing files append an error string rather than crashing the CLI.
+#### **P1: Fragment Integration & YAML Switchover**
+* **Fragment Chaining:** The `CompositeFragment` is built but needs a factory or registry to resolve paths automatically based on the directory hierarchy (Episode > Season > IP).
+* **The "Clean Break":** Now that `PromptLoader` exists, refactor `WorkflowContext` to accept rendered templates rather than raw strings.
+* **Path Decoupling:** Complete the removal of `content_root` defaults like `/home/bud/dev/Stream-Archive` from `file_manager.py` and move them strictly to `config.py`.
 
-4. **Philosophy:**
-   - Agnostic & Decoupled: The engine doesn't care if the content is Valheim or Tech Tutorials.
-   - Zero Fatigue: Automatic path resolution based on `.series_metadata`.
+#### **P2: Metadata Atomicity & Security**
+* **Split Strategy:** Create `Youtube_for_path()` and `locate_transcript_file()` as separate utilities. This prevents metadata lookups from failing when a transcript hasn't been staged yet.
+* **Env Security:** Update `GeminiModel` to throw a clear error if `GOOGLE_API_KEY` is missing from the environment, rather than attempting to load a local config file.
 
-### Implementation Notes
+#### **P3: Context Visibility**
+* **Active Context:** Expand `handle_context_command` to not just set values, but to list available Arcs and Seasons found in the file system.
 
-## Recursion Safety
-- Implement max recursion depth (10 levels) for CompositeFragment
-- Add cycle detection in fragment references
-
-## Performance Optimizations
-- Add LRU cache for resolved fragment paths
-- Implement bulk fragment pre-loading for workflows
-
-## Error Handling Standardization
-- Use format: "[FRAGMENT_ERROR] {fragment_type}@{path}: {reason}"
-- Document all error cases in FragmentError.md
-
-## Flagged Fragment Tags
-- Standardize tag format: "[TAG:NAME]"
-- Add reserved tags list (TBD)
-
-## Metadata Headers
-- Implement YAML front matter for:
-  - Fragment version
-  - Last modified
-  - Author
-  - Dependencies
-
-### Long Term Changes
-#### Phase 4: Optimization (Back Burner)
-* Research long-term persistent File IDs and custom TTL logic in `.series_metadata`. Do we want to have the file live in google longer so we can run back tasks at another time?
-
-
-  ### ⚠️ Brand-CLI Architectural Risks & Considerations
-
-* **Context Ambiguity (Section 3):** * *Risk:* Full-archive crawls on context-less commands (e.g., `Audit E001`) may lead to performance lag or "False Positive" collisions across different IPs.
-    * *Mitigation:* Implement a "Did you mean?" fuzzy search or a LRU (Least Recently Used) cache for the `.series_metadata`.
-
-* **Atomic Migration Failures (Section 5):**
-    * *Risk:* Interruptions during "Inbox to Bundle" auto-migration could result in "Partial Bundles" (e.g., folder created, but files not moved), causing downstream AI analysis to fail or hallucinate.
-    * *Mitigation:* Use transactional file operations or a "Verification Check" before triggering the Audit workflow.
-
-* **Terminology Mapping Overhead (Section 4):**
-    * *Risk:* The "Mental Translation Layer" between generic MAM code terms (`arc`) and brand-specific CLI output (`Biome`) increases debugging complexity and potential mapping nulls in prompt injection.
-    * *Mitigation:* Centralize a `TermMapper` utility to ensure strict validation between `brand_config.json` and AI prompt variables.
-
-
+#### **P4: UX, Terminology, and Cleanup**
+* **Terminology Mapping:** Standardize the "Mental Translation Layer" to ensure strict validation between generic code terms and brand-specific CLI output.
+* **Legacy Cleanup:** Once the YAML engine is verified, remove legacy classes in `src/brand_cli/prompts/` and the base class in `src/brand_cli/prompts/base.py`.
 
 ---
 
-The current implementation of AI prompts in the codebase relies on a Fragment pattern where prompt strings are defined as Python class attributes or return values within Python modules. While this approach provides programmatic flexibility, it tightly couples the natural language content of the prompt with the execution logic of the application. This makes the code difficult to parse visually and prevents non-developers—or even developers looking for a quick adjustment—from modifying the AI's behavior without editing and redeploying the source code.
+### **Part 3: Reference Appendix**
 
-To address these issues, the architecture should move toward a decoupled, template-based system.
+#### **Architectural Risks & Mitigations**
+* **Context Ambiguity:** Full-archive crawls (e.g., `Audit E001`) may cause lag. **Mitigation:** Implement fuzzy search or an LRU cache for `.series_metadata`.
+* **Atomic Migration Failures:** Interruptions during "Inbox to Bundle" moves could cause partial folders. **Mitigation:** Use transactional file operations or a verification check.
+* **Mapping Overhead:** The translation between MAM code terms and brand terms (e.g., "Biome") adds complexity. **Mitigation:** Centralize a `TermMapper` utility.
 
-### 1. Externalize Prompts to a Structured Format
-Instead of embedding multi-line strings inside Python classes, all prompt content should be moved to external files, such as YAML or Markdown. YAML is particularly effective because it allows you to store metadata alongside the prompt text, such as the model version, temperature settings, or descriptions of required variables.
+#### **Technical Guardrails**
+* **Recursion Safety:** `CompositeFragment` currently has a `MAX_RECURSION` of 10 and circular reference detection—ensure this is tested in `conftest.py`.
+* **Standardized Errors:** Use the format: `[FRAGMENT_ERROR] {fragment_type}@{path}: {reason}`.
+* **Transcript Validation:** The `_has_no_audio` check is now the primary gatekeeper for session assets.
 
-By creating a dedicated directory for these templates, the "what" (the prompt text) is physically separated from the "how" (the Python code that calls the API). This immediately improves readability because the Python files are reduced to pure logic, and the prompt files are focused entirely on the language being sent to the AI.
-
-### 2. Implement a Template Engine
-To bridge the gap between external files and Python logic, a template engine like Jinja2 should be used. This allows for dynamic variable injection using a standardized syntax that is common in professional web and CLI development.
-
-In this model, the Python code simply identifies which template it needs and passes a dictionary of data to it. The template engine then handles the string formatting, loops, and conditional logic. This replaces complex string concatenation or the current fragment-composition logic with a clear, declarative structure that any user can read and understand.
-
-### 3. Support for User-Level Overrides
-To solve the issue of users being unable to modify prompts, the system should implement a hierarchical loading strategy. The application can look for prompt files in three locations in order of priority:
-
-First, a user-specific directory (e.g., ~/.config/brand-cli/prompts/).
-Second, a project-specific directory within the current working folder.
-Third, the default system templates bundled with the package.
-
-If a user wants to tweak the "Audit" prompt, they simply copy the default YAML file to their local config folder and edit the text. The CLI will detect the local version and use it instead of the hardcoded default. This provides full customizability without requiring the user to touch a single line of Python.
-
-### 4. Transitioning the Fragment System
-The current fragment-based composition—where different pieces of a prompt are assembled based on context—can be preserved but modernized. Instead of having "Fragment" classes in Python, these fragments should be defined as "Blocks" within a single template file or as small, reusable sub-templates.
-
-The Python logic would then "include" these blocks as needed. This maintains the flexibility of the current system while ensuring that the entire prompt remains visible and editable as a single, cohesive document rather than a scattered collection of code snippets.
-
-### 5. Documentation and Schema Validation
-To ensure that users don't break the application when editing prompts, each prompt should have an associated schema. This can be as simple as a comment at the top of the YAML file listing the required variables. This turns the prompt files into a self-documenting interface, making it clear to the user exactly which data points are available for them to use in their custom instructions.
-
-
----
-
-### Brand-CLI Refactoring: Generic Prompt Engine Migration
-
-**Goal:** Standardize all workflows to use the `PromptLoader` engine and YAML-based templates to eliminate redundant Python logic classes.
-
-**Current Progress:**
-* **Draft Workflow (Started):** Migration to `draft_extraction.yaml` and `draft_creative.yaml` is partially implemented within `src/brand_cli/workflows/draft.py`.
-* **Game Overrides:** Initial logic for handling game-specific templates like `src/brand_cli/resources/prompts/games/valheim.yaml` is functioning in the loader.
-
-**To-Do / Remaining Refactors:**
-* **Audit Workflow:** Migrate the logic and hard-coded templates currently in `src/brand_cli/prompts/audit.py` into the existing `src/brand_cli/resources/prompts/audit.yaml`.
-* **Gold Workflow:** Migrate the extraction logic currently defined in `src/brand_cli/prompts/gold_extraction.py` to a new YAML template.
-* **Cleanup:** Once the Audit and Gold workflows are verified using the new engine, remove the legacy prompt classes in `src/brand_cli/prompts/` and the base class in `src/brand_cli/prompts/base.py`.
-
----
-
-# Breakdown: Implementing an Automated Testing Suite and Framework
-
-Implementing an automated testing suite is best approached by following the "Testing Pyramid" philosophy: a broad base of fast unit tests, a middle layer of integration tests, and a small top layer of end-to-end tests.
-
-
-
-[Image of the testing pyramid]
-
-
-
-### Chunk 6: Continuous Integration (CI) and Automation
-Automate execution so tests run on every code change.
-
-
-
-[Image of a CI/CD pipeline workflow]
-
-
-1. **CI Pipelines:** Configure automated workflows to run the full test suite on every code push or pull request.
-2. **Static Analysis:** Add steps to the pipeline for **linting** and **type checking** to catch structural issues automatically.
-3. **Coverage Reports:** Use coverage tools to generate reports showing which parts of the codebase are exercised by tests, helping to identify gaps in the testing strategy.
-
----
-
-### Role: YouTube Metadata Architect (Grandpa Bud Plays)
-
-### Goal: 
-Optimize the provided Creative Draft for the YouTube 2026 Search Algorithm without 
-breaking the immersion of "Ulf's Voice" or "Grandpa's Legend."
-
-### Instructions:
-1. **The 150-Character Hook**: The very first sentence of the description (within [Ulf's Voice]) 
-   MUST contain the Game Title (Valheim) and the primary Biome/Entity (e.g., Black Forest, Troll, Elder).
-2. **Entity Weaving**: In the [Ulf's Voice] section, weave 1-2 game-specific nouns into the 
-   poetic descriptions (e.g., instead of "the blue mountain," use "the Black Forest Troll").
-3. **The Grandpa Anchor**: Ensure the [Grandpa's Legend] section starts with: 
-   "I'm Grandpa and we're playing Valheim."
-4. **Natural Flow**: Do not use hashtags or metadata blocks at the top. The SEO must feel 
-   like natural, in-character storytelling.
-5. **Preservation**: Do not significantly alter the narrative arc of the Conrad's Chronicle 
-   section; simply ensure the keywords are present.
-
-### Success Metric:
-If a user searches "Valheim [Biome] Gameplay," the top 100 characters of this 
-description should confirm this video is exactly what they are looking for.
-
+#### **YouTube Metadata Architect Role (Grandpa Bud Plays)**
+* **The 150-Character Hook:** First sentence must contain Game Title (Valheim) and Primary Biome/Entity.
+* **The Grandpa Anchor:** Always start the `[Grandpa's Legend]` section with: "I'm Grandpa and we're playing Valheim".
+* **Natural Flow:** Avoid metadata blocks at the top; keywords must feel like natural storytelling.
