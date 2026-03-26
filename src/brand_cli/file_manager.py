@@ -11,6 +11,20 @@ from brand_cli.config import CONFIG, CONTEXT, save_context
 from brand_cli.transcript import Transcript
 
 
+def find_file_in_hierarchy(start_path: pathlib.Path, target_filename: str) -> Optional[pathlib.Path]:
+    """
+    Walk up the directory tree starting from start_path until finding target_filename.
+    Returns the parent directory containing the file, or None if not found.
+    """
+    current_dir = start_path
+    while current_dir != current_dir.parent:  # Stop at root
+        target_file = current_dir / target_filename
+        if target_file.exists():
+            return current_dir
+        current_dir = current_dir.parent
+    return None
+
+
 def resolve_ip_and_series(path: pathlib.Path):
     # Determine which IP and Series the transcript belongs to based on path
     content_root_cfg = CONFIG["archive"].get("content_root", "/home/bud/dev/Stream-Archive")
@@ -86,19 +100,15 @@ def find_transcript_and_metadata(full_ep_id, user_ip=None, user_series=None):
         ip_data = {}
         
     saga_folder_name = transcript_path.parent.parent.name
-    current_dir = transcript_path.parent.parent
+    metadata_filename = series_info.get("arc_metadata_file", "Arc.md")
+    arc_dir = find_file_in_hierarchy(transcript_path.parent.parent, metadata_filename)
     arc_name = "Unknown"
     
-    metadata_filename = series_info.get("arc_metadata_file", "Arc.md")
-
-    while current_dir != search_path.parent and current_dir != current_dir.parent:
-        arc_file = current_dir / metadata_filename
-        if arc_file.exists():
-            with open(arc_file, 'r', encoding='utf-8') as f:
-                arc_name = f.read().strip()
-            break
-        current_dir = current_dir.parent
-
+    if arc_dir:
+        arc_file = arc_dir / metadata_filename
+        with open(arc_file, 'r', encoding='utf-8') as f:
+            arc_name = f.read().strip()
+    
     if arc_name == "Unknown":
         default_arcs = series_info.get("default_arcs", {})
         arc_name = default_arcs.get(saga_folder_name, "Unknown/Multiple")

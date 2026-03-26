@@ -4,9 +4,11 @@ import json
 from pathlib import Path
 from typing import cast, Optional, Dict, Any, TYPE_CHECKING, Tuple
 from brand_cli.ai.gemini import GeminiModel
-from brand_cli.file_manager import save_audit_report, read_file
+from brand_cli.file_manager import save_audit_report, read_file, find_file_in_hierarchy
 from brand_cli.prompts.loader import PromptLoader
 from brand_cli.workflows.base import Workflow
+from brand_cli.fragments.tagged import TaggedExternalFragment
+
 
 if TYPE_CHECKING:
     from brand_cli.workflow_context import WorkflowContext
@@ -90,6 +92,13 @@ class DraftWorkflow(Workflow):
 
         # 2. SEO Pass (Optional)
         final_data, seo_model = self._run_seo_pass(context, model, draft_data)
+
+        links_dir = find_file_in_hierarchy(Path(context.transcript_path), "Standard Link Repository.md")
+        if links_dir:
+            links_text = self._load_file_with_logging(links_dir, "Standard Link Repository.md", "Standard Link Repository")
+            saga_tag = f"* **Saga {str(int(context.season.lstrip('S')))}"
+            tagged_fragment = TaggedExternalFragment(links_text, saga_tag)
+            final_data["standard_links"] = tagged_fragment.resolve() or "No standard links found for this season."
         
         # 3. Final Assembly & Save
         # Use the name of the last model to successfully touch the data
@@ -177,15 +186,13 @@ class DraftWorkflow(Workflow):
 
     def _load_brand_assets(self, base_dir: Path) -> Dict[str, str]:
         """Climbs the directory tree to find Ulf's Persona, the Protocol, and Brand Context."""
-        # Chronicles-Of-The-Exile (Arc level)
-        arc_dir = base_dir.parent.parent
-        # Stream-Archive is the root of the archive
-        archive_root = arc_dir.parent.parent
-        # 000-Global-Core with the Brand Voice and other assets
+     
+        archive_root = find_file_in_hierarchy(base_dir, ".series_metadata") or base_dir
+        ip_root = find_file_in_hierarchy(base_dir, "Descriptions.md") or base_dir
+        arc_dir = find_file_in_hierarchy(base_dir, "Ulf Persona.md") or base_dir
         global_core_dir = archive_root / "000-Global-Core"
-        # ip_root - all valhiem assets
-        ip_root = arc_dir.parent
-
+        if not (global_core_dir / "Brand-Voice.md").exists():
+            global_core_dir = base_dir
 
         grandpa_content = self._load_file_with_logging(global_core_dir, "Brand-Voice.md", "Grandpa")
         protocol_content = self._load_file_with_logging(ip_root, "Descriptions.md", "Descriptions Protocol")
@@ -236,6 +243,7 @@ class DraftWorkflow(Workflow):
         ulf = final_data.get("ulf_hook_seo", final_data.get("ulf_hook", draft_data.get("ulf_hook", "")))
         legend = final_data.get("grandpa_legend_seo", final_data.get("grandpa_legend", draft_data.get("grandpa_legend", "")))
         chronicle = final_data.get("conrad_chronicle_seo", final_data.get("conrad_chronicle", draft_data.get("conrad_chronicle", "")))
+        links = final_data.get("standard_links", draft_data.get("standard_links", "No Links Provided."))
         tags = final_data.get("tags", [])
 
         md = f"# 📝 Triple-Threat Description: {context.season} {context.episode}\n\n"
@@ -244,8 +252,8 @@ class DraftWorkflow(Workflow):
         md += f"**[Grandpa's Legend]**\n{legend}\n\n"
         md += f"**[Conrad's Chronicle]**\n{chronicle}\n\n"
         md += "---\n\n"
-        md += "## 🔗 Standard Link Repository\n"
-        md += "[Insert Link Repository from Standard Link Repository.md here]\n\n"
+        md += "## 🔗 Continue the Journey\n"
+        md += f"{links}\n\n"
         md += "## 🏷️ SEO & Metadata\n"
         md += f"**Injected Tags:** {', '.join(tags)}" if tags else "*No SEO injection performed.*"
         return md

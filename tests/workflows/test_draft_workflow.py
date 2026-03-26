@@ -128,3 +128,39 @@ def test_draft_formatter_integration(integration_context, mock_gemini, monkeypat
     assert "[Ulf's Voice]" in result
     assert "[Grandpa's Legend]" in result
     assert "[Conrad's Chronicle]" in result
+
+def test_standard_links_priority(integration_context):
+    """Test final_data links take priority over draft_data"""
+    workflow = DraftWorkflow()
+    markdown = workflow._build_markdown(
+        draft_data={"standard_links": "draft_links"},
+        final_data={"standard_links": "final_links"},
+        context=integration_context
+    )
+    links_section = markdown.split("## 🔗")[1].split("##")[0]
+    links_content = links_section.split("\n", 1)[1].strip()
+    assert links_content == "final_links"
+
+def test_standard_links_draft_data_fallback(integration_context):
+    """Test draft_data links are used when final_data has none"""
+    workflow = DraftWorkflow()
+    markdown = workflow._build_markdown(
+        draft_data={"standard_links": "draft_links"},
+        final_data={},
+        context=integration_context
+    )
+    links_section = markdown.split("## 🔗")[1].split("##")[0]
+    links_content = links_section.split("\n", 1)[1].strip()
+    assert links_content == "draft_links"
+
+def test_standard_links_default_fallback_non_empty(integration_context):
+    """Test default fallback produces non-empty content"""
+    workflow = DraftWorkflow()
+    markdown = workflow._build_markdown(
+        draft_data={},
+        final_data={},
+        context=integration_context
+    )
+    links_section = markdown.split("## 🔗")[1].split("##")[0]
+    links_content = links_section.split("\n", 1)[1].strip()
+    assert links_content  # Non-empty check    
