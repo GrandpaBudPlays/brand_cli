@@ -3,6 +3,7 @@ from multiprocessing import context
 import os
 import json
 from pathlib import Path
+from random import seed
 from typing import cast, Optional, Dict, Any, TYPE_CHECKING, Tuple
 from brand_cli.ai.gemini import GeminiModel
 from brand_cli.file_manager import save_audit_report, read_file, find_file_in_hierarchy
@@ -110,9 +111,11 @@ class DraftWorkflow(Workflow):
         # 4. Attempt to find and inject the World Seed with randomization.
         seed_dir = find_file_in_hierarchy(Path(context.transcript_path), "World Seed.md")
         if seed_dir:
-            seed_text = self._load_file_with_logging(Path(seed_dir), "World Seed.md", "World Seed")
+            seed_path = Path(seed_dir) / "World Seed.md"
+            self.logger.info(f"Loaded World Seed from {seed_path}")
+            seed_text = read_file(str(seed_path)) or ""
             seed_fragment = TextPlusRandom(raw_content=seed_text)
-            final_data["world_seed"] = seed_fragment.resolve() or "No world seed found."
+            final_data["world_seed"] = seed_fragment.resolve() or f"No world seed found at {seed_dir}."
         else:
             self.logger.error(f"No World Seed content found at {seed_dir}")
             final_data["world_seed"] = f"No World Seed content found at {seed_dir}"
@@ -261,6 +264,7 @@ class DraftWorkflow(Workflow):
         legend = final_data.get("grandpa_legend_seo", final_data.get("grandpa_legend", draft_data.get("grandpa_legend", "")))
         chronicle = final_data.get("conrad_chronicle_seo", final_data.get("conrad_chronicle", draft_data.get("conrad_chronicle", "")))
         links = final_data.get("standard_links", draft_data.get("standard_links", "No Links Provided."))
+        world_seed = final_data.get("world_seed", "No World Seed Provided.")
         tags = final_data.get("tags", [])
 
         md = f"# 📝 Triple-Threat Description: {context.season} {context.episode}\n\n"
@@ -271,6 +275,7 @@ class DraftWorkflow(Workflow):
         md += "---\n\n"
         md += "## 🔗 Continue the Journey\n"
         md += f"{links}\n\n"
+        md += f"## 🌍 World Seed\n{world_seed}\n\n"
         md += "## 🏷️ SEO & Metadata\n"
         md += f"**Injected Tags:** {', '.join(tags)}" if tags else "*No SEO injection performed.*"
         return md
