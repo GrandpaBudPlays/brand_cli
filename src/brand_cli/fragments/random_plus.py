@@ -1,12 +1,12 @@
 from typing import Optional
+from pathlib import Path
 from brand_cli.fragments.base import Fragment
 import random
 import re
 
 class TextPlusRandom(Fragment):
-    def __init__(self, raw_content: str, start_tag: str = "-Begin Random-"):
-        super().__init__()
-        self.raw_content = raw_content
+    def __init__(self, raw_content: str, path: Optional[Path] = None, start_tag: str = "-Begin Random-"):
+        super().__init__(path=path, raw_content=raw_content)
         self.start_tag = start_tag
 
     def resolve(self) -> str:

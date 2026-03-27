@@ -3,16 +3,16 @@ from pathlib import Path
 from typing import Optional
 
 class Fragment(ABC):
-    """Base abstract class for all fragment types"""
-    
-    def __init__(self, path: Path):
+    def __init__(self, path: Optional[Path] = None, raw_content: Optional[str] = None):
         self.path = path
-        self._content: Optional[str] = None
-    
+        self.raw_content = raw_content
+
     @abstractmethod
     def resolve(self) -> str:
-        """Resolve fragment content"""
+        """Return the processed string content of the fragment."""
         pass
-    
+
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.path})"
+        # Show path if it exists, otherwise show a snippet of the raw content
+        identifier = self.path if self.path else f"raw:{str(self.raw_content)[:20]}..."
+        return f"{self.__class__.__name__}({identifier})"

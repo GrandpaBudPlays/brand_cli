@@ -1,4 +1,5 @@
 from __future__ import annotations
+from multiprocessing import context
 import os
 import json
 from pathlib import Path
@@ -94,20 +95,27 @@ class DraftWorkflow(Workflow):
         # 2. SEO Pass (Optional)
         final_data, seo_model = self._run_seo_pass(context, model, draft_data)
 
-        # 3. Attempt to find and inject standard links with tagging.
+        # 3. Attempt to find and inject standard links.
         links_dir = find_file_in_hierarchy(Path(context.transcript_path), "Standard Link Repository.md")
         if links_dir:
             links_text = self._load_file_with_logging(links_dir, "Standard Link Repository.md", "Standard Link Repository")
             saga_tag = f"* **Saga {str(int(context.season.lstrip('S')))}"
-            tagged_fragment = TaggedExternalFragment(links_text, saga_tag)
+            tagged_fragment = TaggedExternalFragment(raw_content=links_text, start_tag=saga_tag)
             final_data["standard_links"] = tagged_fragment.resolve() or "No standard links found for this season."
+        else:
+            self.logger.error(f"No World Seed content found at {links_dir}")
+            final_data["standard_links"] = f"No standard links found for this season."
 
-        # 4. Attempt to find and inject the World Seed with randomization if needed.
+
+        # 4. Attempt to find and inject the World Seed with randomization.
         seed_dir = find_file_in_hierarchy(Path(context.transcript_path), "World Seed.md")
         if seed_dir:
             seed_text = self._load_file_with_logging(Path(seed_dir), "World Seed.md", "World Seed")
-            seed_fragment = TextPlusRandom(seed_text)
+            seed_fragment = TextPlusRandom(raw_content=seed_text)
             final_data["world_seed"] = seed_fragment.resolve() or "No world seed found."
+        else:
+            self.logger.error(f"No World Seed content found at {seed_dir}")
+            final_data["world_seed"] = f"No World Seed content found at {seed_dir}"
         
         # 5. Final Assembly & Save
         # Use the name of the last model to successfully touch the data
