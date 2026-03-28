@@ -31,19 +31,31 @@ class BasePrompt(ABC):
     def config(self) -> PromptConfig:
         """Return the prompt configuration"""
         pass
-    
+        
     def build_prompt(self, **kwargs: Any) -> str:
         """Build the user prompt from template with provided variables"""
+        
+        # 1. Prepare the data for the YAML loader
+        # This ensures 'pacing' is available to the YAML template
+        context = {
+            **kwargs.get("session_data", {}),
+            **{k: v for k, v in kwargs.items() if k not in ["fragments", "session_data"]}
+        }
+
         try:
+            # 2. Try to load from YAML (The MVP Goal)
             loaded = self._loader.load_prompt(
                 operation_name=self.name,
                 fragments=kwargs.get("fragments", {}),
-                session_data=kwargs.get("session_data", {})
+                session_data=context
             )
             return loaded["user_prompt"]
-        except ValueError:
-            # Fall back to original format if YAML not found
-            return self.config.user_template.format(**kwargs)
+
+        except (ValueError, KeyError, FileNotFoundError):
+            # 3. Fallback (The 'Legacy' Path)
+            # We use the same 'context' here so the behavior is identical
+            # during the transition period.
+            return self.config.user_template.format(**context)
     
     def get_system_instruction(self) -> str:
         """Return the system instruction"""

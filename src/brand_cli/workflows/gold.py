@@ -1,6 +1,7 @@
 from __future__ import annotations
 import json
 from typing import cast
+from pathlib import Path
 from brand_cli.ai.gemini import GeminiModel
 from brand_cli.file_manager import save_audit_report
 from brand_cli.workflow_context import WorkflowContext
@@ -8,6 +9,7 @@ from brand_cli.transcript import Transcript
 from brand_cli.prompts import get_prompt_library
 from brand_cli.prompts.gold_extraction import GoldExtractionPrompt
 from brand_cli.workflows.base import Workflow
+from brand_cli.workflows.mixins import ChapterMixin
 
 
 def json_to_gold_markdown(data: dict, context: WorkflowContext) -> str:
@@ -42,7 +44,7 @@ def json_to_gold_markdown(data: dict, context: WorkflowContext) -> str:
     return md
 
 
-class GoldWorkflow(Workflow):
+class GoldWorkflow(Workflow, ChapterMixin):
     """Generates the strategic gold extraction report."""
     
     def execute(self, context: WorkflowContext, model: GeminiModel) -> None:
@@ -55,10 +57,16 @@ class GoldWorkflow(Workflow):
         if context.uploaded_file:
             print(f"Processing uploaded file: {getattr(context.uploaded_file, 'name', 'Unknown')}")
         
+        # Ensure chapters exist (idempotent)
+        chapters_data = self._get_or_create_chapters(context, model)
+        
         prompts = get_prompt_library("valheim")
         gold_prompt: GoldExtractionPrompt = cast(GoldExtractionPrompt, prompts.get("gold_extraction"))
         
-        prompt = gold_prompt.build_gold_prompt(duration_sec=context.duration)
+        prompt = gold_prompt.build_gold_prompt(
+            duration_sec=context.duration,
+            chapters_json=json.dumps(chapters_data) if chapters_data else None
+        )
         
         temperature = gold_prompt.get_temperature(model.name)
         result = model.generate(
@@ -68,6 +76,10 @@ class GoldWorkflow(Workflow):
             response_mime_type="application/json",
             file_obj=context.uploaded_file
         )
+        
+        # Post-processing merge: enforce chapter sync
+        if context.chapters_path:
+            result["youtube_chapters"] = json.loads(Path(context.chapters_path).read_text())
         
         self._process_json_result(
             result, 

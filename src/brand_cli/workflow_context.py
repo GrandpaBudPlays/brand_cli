@@ -23,3 +23,5 @@ class WorkflowContext:
     duration: float
     terms: Terminology
     uploaded_file: Optional[Any] = None
+    chapters_path: Optional[str] = None  # Path to Extraction_Chapters.json
+    force: bool = False  # CLI flag for idempotency bypass

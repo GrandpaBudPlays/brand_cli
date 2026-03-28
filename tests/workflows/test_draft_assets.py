@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from pathlib import Path
 from brand_cli.workflows.draft import DraftWorkflow
 
-class TestDraftWorkflow(unittest.TestCase):
+class TestDraftAssets(unittest.TestCase):
     def setUp(self):
         self.workflow = DraftWorkflow()
         self.mock_context = MagicMock()

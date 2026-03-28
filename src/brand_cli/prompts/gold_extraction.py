@@ -1,3 +1,5 @@
+from typing import Optional
+from typing import Optional
 from brand_cli.prompts.base import BasePrompt, PromptConfig
 
 
@@ -22,13 +24,10 @@ CATEGORIES:
 - Type A (Shorts): 15-60s 'Lessons/Hooks' + On-Screen Hook.
 - Type B (Clips): 1-5m Narrative beats + Strategic Rationale.
 - Type C (Arc/Milestone Components): Atmospheric/Action montages + Theme.
-- Type D (Timeline Map): YouTube Chapters. Start at 0:00. Pacing: {pacing}.
-  CRITICAL YOUTUBE CHAPTER RULES:
-  1. The first timestamp MUST be exactly "00:00"
-  2. The first chapter MUST be named exactly "00:00 Intro" (or similar, but starting with 00:00).
-  3. Chapters must be listed in chronological order.
-  4. Chapters must be at least 10 seconds apart.
-  5. Format timestamps as MM:SS (e.g., "05:12") or HH:MM:SS (e.g., "01:23:45"). NEVER use fractions or decimals (e.g., "05:12.500").
+
+=== PRE-EXTRACTED CHAPTERS ===
+{chapters_json}
+
 
 OUTPUT INSTRUCTIONS:
 You must return a raw JSON object matching this structure:
@@ -62,9 +61,11 @@ You must return a raw JSON object matching this structure:
     
     def build_gold_prompt(
         self,
-        duration_sec: float
+        duration_sec: float,
+        chapters_json: Optional[str] = None
     ) -> str:
         pacing = "High-density" if duration_sec < 1200 else "Strategic milestones"
         return self.build_prompt(
-            pacing=pacing
+            pacing=pacing,
+            chapters_json=chapters_json or "No pre-extracted chapters."
         )

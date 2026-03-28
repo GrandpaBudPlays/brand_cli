@@ -45,6 +45,9 @@ def test_link_injection_with_repository_missing(mock_tagged, mock_random, mock_e
         mock_tagged.return_value.resolve.return_value = None
         mock_random.return_value.resolve.return_value = None
         
+        # Create test files
+        (tmp_path / "Extraction_Chapters.json").write_text('{"chapters": []}')
+        
         # Mock path for TextPlusRandom
         mock_random.return_value.path = tmp_path / "world_seed"
     
@@ -101,15 +104,18 @@ def test_world_seed_injection_with_file_found(mock_tagged, mock_random, mock_exi
         mock_tagged.return_value.resolve.return_value = None
         mock_random.return_value.resolve.return_value = "Test world seed content"
         
+        # Create test files
+        seed_file = tmp_path / "World Seed.md"
+        seed_file.write_text("Test content")
+        
+        extraction_file = tmp_path / "Extraction_Chapters.json"
+        extraction_file.write_text('{"chapters": []}')
+        
         # Mock path for TextPlusRandom
         mock_random.return_value.path = tmp_path / "world_seed"
     
         # Mock logger
         workflow.logger = MagicMock()
-    
-        # Create test file with exact capitalization
-        seed_file = tmp_path / "World Seed.md"
-        seed_file.write_text("Test content")
         
         # Mock to return the parent directory
         monkeypatch.setattr(
@@ -165,6 +171,10 @@ def test_world_seed_injection_with_file_missing(mock_tagged, mock_random, mock_e
         # Mock fragment classes
         mock_tagged.return_value.resolve.return_value = None
         mock_random.return_value.resolve.return_value = None
+        
+        # Create test files
+        (tmp_path / "Extraction_Chapters.json").write_text('{"chapters": []}')
+        (tmp_path / "world_seed").mkdir()
         
         # Mock path for TextPlusRandom
         mock_random.return_value.path = tmp_path / "world_seed"

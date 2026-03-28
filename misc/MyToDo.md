@@ -1,11 +1,17 @@
 ## New Items to prioritize and Organize
-Ability for the system to self diagnose. (very low priority, long range goals)
-Cleanup the fragment implementation. Determine if the fragment class should load files or not.
-Add 000-Global to the end of the directory search code
-Move the creative pass output markdown into a yaml file.
-stop saving model name in the file name
-stop saving multiple versions of the same data (json and md etc)
-
+- Ability for the system to self diagnose. (very low priority, long range goals)
+- Cleanup the fragment implementation. Determine if the fragment class should load files or not.
+- Add 000-Global to the end of the directory search code
+- Move the creative pass output markdown into a yaml file.
+- stop saving model name in the file name
+- stop saving multiple versions of the same data (json and md etc)
+- Cleanup pathing, move to a dictionary of paths that is resolved at the start of a workflow. remove all hard coded paths.
+- Multi-pass Gold worrkflow. Post MVP (see notes below)
+- Consider these architectural improvements:
+   - Add proper error handling for missing prompt files
+   - Make the prompts directory path configurable
+   - Add validation for chapter data structure
+- Improve arg handling to Zero pad Saga and Episode numbers
 
 # MyToDo.md
 
@@ -26,11 +32,37 @@ stop saving multiple versions of the same data (json and md etc)
 
 ## 🛠️ Detailed Implementation Notes
 
-### Refactoring the Draft Workflow
+### Refactoring the Draft Workflow (post MVP)
 - **Fragment Engine:** Transition to the Polymorphic Fragment Engine to handle Static, Tagged, and Random fragments.
 - **YAML Templates:** Complete migration of all workflows to use external YAML templates via the `PromptLoader`.
 - **Metadata Atomicity:** Split metadata retrieval to ensure it is handled independently from the transcript data.
 - **Security:** Ensure all API keys are managed through environmental variables rather than being stored in the codebase.
+
+- **Multipass Gold Workflow:**
+    - Why Multi-Pass is the "Pro" Move
+        1. **The "Context Window" Advantage** 
+        In a single pass, the AI has to hold the transcript, the YouTube rules, the "Brand voice" for the ledger, and the logic for three different clip types all at once.
+
+            - **Multi-Pass:** You feed the AI only what it needs for that specific task. For Type A (Shorts), it only needs to look for high-energy hooks, not the overall narrative arc.
+
+        2. **Specific "Personas" per Pass** 
+        
+        You can swap the system_instruction for each pass:  
+        - **Pass 1 (The Editor):** Focuses strictly on timestamps and accuracy for the Timeline.
+        - **Pass 2 (The Social Lead):** Focuses on "clickability" and hooks for Type A (Shorts).
+        - **Pass 3 (The Writer):** Focuses on the "Brand voice" for the Ledger Entry.
+
+        3. **Error Isolation (Anti-Fragility)**   
+        If the AI hallucinates a timestamp in a single-pass prompt, the whole JSON object might fail to parse. In a multi-pass system, if the "Shorts" pass fails, your "Chapters" and "Ledger" are still perfectly intact.
+        
+        The "Post-MVP" Architecture  
+
+        | Pass | Input | Goal | Output |
+        | :--- | :--- | :--- | :--- |
+        | Pass 1: Structuring | Raw Transcript | Cleaned Timeline & Chapters | chapters.json | 
+        | Pass 2: Mining | Chapters + Transcript | Identifying Gold (A, B, C) | highlights.json |
+        | Pass 3: Refining | Highlights | Writing Ledger & Social Copy | final_metadata.json |
+
 
 ## 📚 Reference Appendix
 

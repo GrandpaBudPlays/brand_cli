@@ -9,6 +9,7 @@ from brand_cli.ai.gemini import GeminiModel
 from brand_cli.file_manager import save_audit_report, read_file, find_file_in_hierarchy
 from brand_cli.prompts.loader import PromptLoader
 from brand_cli.workflows.base import Workflow
+from brand_cli.workflows.mixins import ChapterMixin
 from brand_cli.fragments.tagged import TaggedExternalFragment
 from brand_cli.fragments.random_plus import TextPlusRandom  
 
@@ -16,7 +17,7 @@ from brand_cli.fragments.random_plus import TextPlusRandom
 if TYPE_CHECKING:
     from brand_cli.workflow_context import WorkflowContext
 
-class DraftWorkflow(Workflow):
+class DraftWorkflow(ChapterMixin, Workflow):
     """
     The 4-pass Description Draft Pipeline.
     
@@ -267,6 +268,28 @@ class DraftWorkflow(Workflow):
         world_seed = final_data.get("world_seed", "No World Seed Provided.")
         tags = final_data.get("tags", [])
 
+        # Get or create chapters
+        chapters_data = self._get_or_create_chapters(context, draft_data.get("model", None))
+        chapters = chapters_data.get("chapters", [])
+        
+        # Format chapters with icons
+        formatted_chapters = []
+        for chapter in chapters:
+            timestamp = chapter.get("timestamp", "00:00")
+            title = chapter.get("title", "Untitled")
+            
+            # Map chapter titles to icons
+            icon = "🛡️"  # Default icon
+            if "combat" in title.lower() or "axe" in title.lower():
+                icon = "🪓"
+            elif "hunt" in title.lower() or "animal" in title.lower():
+                icon = "🐗"
+            elif "explore" in title.lower() or "mountain" in title.lower():
+                icon = "🏔️"
+            
+            formatted_chapters.append(f"{timestamp} {icon} {title}")
+        
+        # Build the markdown
         md = f"# 📝 Triple-Threat Description: {context.season} {context.episode}\n\n"
         md += "## 🪓 The Narrative\n\n"
         md += f"**[Ulf's Voice]**\n{ulf}\n\n"
@@ -276,6 +299,8 @@ class DraftWorkflow(Workflow):
         md += "## 🔗 Continue the Journey\n"
         md += f"{links}\n\n"
         md += f"## 🌍 World Seed\n{world_seed}\n\n"
+        md += f"---\n\nChapters:\n"
+        md += "\n".join(formatted_chapters) + "\n\n"
         md += "## 🏷️ SEO & Metadata\n"
         md += f"**Injected Tags:** {', '.join(tags)}" if tags else "*No SEO injection performed.*"
         return md
