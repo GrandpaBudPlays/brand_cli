@@ -36,6 +36,13 @@ class DraftWorkflow(ChapterMixin, Workflow):
         pass_number = os.getenv("DRAFT_PASS", "1")
         self.logger.info(f"Executing Draft Workflow - Pass {pass_number}")
         
+        # Pre-flight check: Draft workflow requires a preceding Gold report
+        base_dir = Path(context.transcript_path).parent
+        if not (base_dir / "Gold.md").exists():
+            self.logger.error("Abort: Gold.md not found in episode folder.")
+            print(f"Error: Gold report (Gold.md) not found in {base_dir}. Please run the 'gold' or 'audit' workflow first.")
+            return
+
         try:
             if pass_number == "1":
                 return self._run_extraction_pass(context, model)
@@ -117,7 +124,7 @@ class DraftWorkflow(ChapterMixin, Workflow):
             tagged_fragment = TaggedExternalFragment(raw_content=links_text, start_tag=saga_tag)
             final_data["standard_links"] = tagged_fragment.resolve() or "No standard links found for this season."
         else:
-            self.logger.error(f"No World Seed content found at {links_dir}")
+            self.logger.error(f"Standard Link Repository not found in hierarchy.")
             final_data["standard_links"] = f"No standard links found for this season."
 
 
@@ -134,11 +141,8 @@ class DraftWorkflow(ChapterMixin, Workflow):
             final_data["world_seed"] = f"No World Seed content found at {seed_dir}"
         
         # 5. Final Assembly & Save
-        # Use the name of the last model to successfully touch the data
-        attribution_model = seo_model if seo_model else creative_model
-        
         final_md = self._build_markdown(draft_data, final_data, context, model)
-        self._save_final_description(final_md, context, attribution_model)
+        self._save_final_description(final_md, context)
         return final_md
 
     # --- Sub-Pass Logic ---
@@ -149,6 +153,21 @@ class DraftWorkflow(ChapterMixin, Workflow):
         base_dir = Path(context.transcript_path).parent
         assets = self._load_brand_assets(base_dir)
         
+        # Load ledger_entry from Gold report to maintain voice consistency
+        ledger_entry = ""
+        # Look for the gold raw JSON (supports both new naming and legacy with model names)
+        gold_json_path = next(base_dir.glob("Gold*raw.json"), None)
+
+        if gold_json_path:
+            try:
+                with open(gold_json_path, "r", encoding="utf-8") as f:
+                    gold_data = json.load(f)
+                    ledger_entry = gold_data.get("ledger_entry", "")
+                    if ledger_entry:
+                        self.logger.info(f"Loaded ledger_entry from {gold_json_path.name}")
+            except Exception as e:
+                self.logger.error(f"Failed to load ledger from {gold_json_path}: {e}")
+
         loader = PromptLoader()
         prompt_data = loader.load_prompt(
             "draft_creative",
@@ -161,7 +180,8 @@ class DraftWorkflow(ChapterMixin, Workflow):
             },
             session_data={
                 "game": "valheim",
-                "events_json": events_json
+                "events_json": events_json,
+                "ledger_entry": ledger_entry
             }
         )
         prompt = prompt_data["user_prompt"]
@@ -277,9 +297,9 @@ class DraftWorkflow(ChapterMixin, Workflow):
         return formatted
 
 
-    def _save_final_description(self, content: str, context: WorkflowContext, model_name: str) -> None:
+    def _save_final_description(self, content: str, context: WorkflowContext) -> None:
         """Saves the human-readable Markdown to the episode directory."""
-        save_audit_report(context.transcript_path, content, "Description", model_name)
+        save_audit_report(context.transcript_path, content, "Description")
         print("\nDraft Pipeline Complete.")
 
     def _build_markdown(self, draft_data: dict, final_data: dict, context: WorkflowContext, model: GeminiModel) -> str:

@@ -14,7 +14,8 @@ class Workflow(ABC):
         pass
 
     def _process_json_result(self, result: Any, context, report_name, formatter_func=None) -> dict[str, Any]:
-        if not result.success:
+        # Handle both raw AI results and pre-processed dictionaries
+        if hasattr(result, 'success') and not result.success:
             raise RuntimeError(f"{report_name} failed: {result.error}")
 
         # Handle Mock/Dict inputs or extract from content/text
@@ -29,10 +30,10 @@ class Workflow(ABC):
 
         # Audit/Report logic (Skip if testing)
         if not hasattr(result, '_mock_return_value'):
-            save_audit_report(context.transcript_path, json.dumps(data, indent=2), report_name, f"{result.model_name}-raw", ".json")
+            save_audit_report(context.transcript_path, json.dumps(data, indent=2), report_name, "raw", ".json")
             if formatter_func:
                 formatted = formatter_func(data, context)
-                save_audit_report(context.transcript_path, formatted, report_name, result.model_name)
+                save_audit_report(context.transcript_path, formatted, report_name)
 
         return data
         

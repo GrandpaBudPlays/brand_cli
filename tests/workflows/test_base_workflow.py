@@ -59,9 +59,9 @@ class TestBaseWorkflow:
         # Run the logic
         workflow._process_json_result(result, integration_context, "IntegrationTest")
 
-        # Verify naming convention: "ReportName - ModelName-raw.json"
+        # Verify naming convention: "ReportName - raw.json"
         transcript_dir = transcript_path.parent
-        expected_file = "IntegrationTest - test-model-raw.json"
+        expected_file = "IntegrationTest - raw.json"
         
         assert (transcript_dir / expected_file).exists(), f"File not found. Found: {list(transcript_dir.iterdir())}"
         

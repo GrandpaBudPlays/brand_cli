@@ -77,12 +77,19 @@ class GoldWorkflow(Workflow, ChapterMixin):
             file_obj=context.uploaded_file
         )
         
-        # Post-processing merge: enforce chapter sync
+        if not result.success:
+            raise RuntimeError(f"Gold Extraction failed: {result.error}")
+
+        # Extract to dict first to avoid mutating the AI result object directly
+        data = json.loads(result.content) if hasattr(result, 'content') else json.loads(result.text)
+
+        # Enforce chapter sync from the local Extraction_Chapters.json
         if context.chapters_path:
-            result["youtube_chapters"] = json.loads(Path(context.chapters_path).read_text())
+            chapters_source = json.loads(Path(context.chapters_path).read_text())
+            data["youtube_chapters"] = chapters_source.get("chapters", [])
         
         self._process_json_result(
-            result, 
+            data, 
             context, 
             report_name="Gold", 
             formatter_func=json_to_gold_markdown

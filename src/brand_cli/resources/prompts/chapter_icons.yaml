@@ -1,6 +1,6 @@
 🎬: [intro, start]
 🏁: [conclusion, end, final]
-🐗: [hunt, animal, boar, leather]
+🐗: [hunt, animal, boar, leather, deer, hide]
 🪓: [axe, flint]
 🌩️: [boss, eikthyr, altar]
 ⚔️: [combat, fight, club, defend]
@@ -11,4 +11,5 @@
 🗺️: [explore, meadow, mountain, world, seed]
 🍖: [food, stamina, cook, honey]
 💤: [sleep, rest, night, bed]
+🪙: [gold, treasure, loot, looting, chest]
 🛡️: [default]
