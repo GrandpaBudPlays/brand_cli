@@ -1,0 +1,29 @@
+template: |
+  # 📝 Triple-Threat Description: {season} {episode}
+
+  ## 🪓 The Narrative
+
+  **[Ulf's Voice]**
+  {ulf}
+
+  **[Grandpa's Legend]**
+  {legend}
+
+  **[Conrad's Chronicle]**
+  {chronicle}
+
+  ---
+
+  ## 🔗 Continue the Journey
+  {links}
+
+  ## 🌍 World Seed
+  {world_seed}
+
+  ---
+
+  Chapters:
+  {chapters}
+
+  ## 🏷️ SEO & Metadata
+  {seo_metadata}

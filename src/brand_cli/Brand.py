@@ -35,7 +35,7 @@ def main():
     session = prepare_session_assets(args)
 
     print(f"--- Processing (Operation: {operation}) on {session.full_ep_id}  ---")
-    is_draft_continue = (operation == "draft" and os.getenv("DRAFT_PASS") != "1")
+    is_draft_continue = (operation == "draft" and os.getenv("DRAFT_PASS", "1") != "1")
     needs_upload = session and session.transcript_path and not is_draft_continue
 
     try:
@@ -46,6 +46,7 @@ def main():
                 file_path=session.transcript_path,
                 display_name=f"Transcript_{session.full_ep_id}"
             )
+            
         model_runner = ModelRunner()
         print("Client initialized.")
         

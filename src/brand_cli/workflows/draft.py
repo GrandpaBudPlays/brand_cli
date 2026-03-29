@@ -1,10 +1,8 @@
 from __future__ import annotations
-from multiprocessing import context
 import os
 import json
 from pathlib import Path
-from random import seed
-from typing import cast, Optional, Dict, Any, TYPE_CHECKING, Tuple
+from typing import cast, Optional, Dict, Any, TYPE_CHECKING, Tuple, List
 from brand_cli.ai.gemini import GeminiModel
 from brand_cli.file_manager import save_audit_report, read_file, find_file_in_hierarchy
 from brand_cli.prompts.loader import PromptLoader
@@ -31,18 +29,26 @@ class DraftWorkflow(ChapterMixin, Workflow):
         super().__init__()
         import logging
         self.logger = logging.getLogger(__name__)
+        self._prompt_loader = PromptLoader()
+        self._icon_map = None
 
     def execute(self, context: WorkflowContext, model: GeminiModel):
         pass_number = os.getenv("DRAFT_PASS", "1")
         self.logger.info(f"Executing Draft Workflow - Pass {pass_number}")
-
-        if pass_number == "1":
-            return self._run_extraction_pass(context, model)
-        elif pass_number == "2":
-            return self._run_creative_and_seo_pipeline(context, model)
-        else:
-            self.logger.error(f"Unknown pass number: {pass_number}")
-            return None
+        
+        try:
+            if pass_number == "1":
+                return self._run_extraction_pass(context, model)
+            elif pass_number == "2":
+                return self._run_creative_and_seo_pipeline(context, model)
+            else:
+                self.logger.error(f"Unknown pass number: {pass_number}")
+                return None
+        finally:
+            # Cleanup transcript after extraction is complete
+            if context.uploaded_file and pass_number == "1":
+                self.logger.info("Cleaning up transcript after Pass 1")
+                model.delete_file(context.uploaded_file)
 
     # --- Pipeline Coordination ---
 
@@ -52,26 +58,32 @@ class DraftWorkflow(ChapterMixin, Workflow):
         base_dir = Path(context.transcript_path).parent
         hints = read_file(str(base_dir / "hints.txt")) or ""
         
-        loader = PromptLoader()
+        self._get_or_create_chapters(context, model)
 
-        # Uses helper to handle transcript upload/deletion
-        result = self._generate_with_transcript(
-            "draft_extraction", 
-            loader, 
-            context, 
-            model,
+        prompt_data = self._prompt_loader.load_prompt(
+            "draft_extraction",
             fragments={"hints": hints},
             session_data={
                 "episode_id": context.full_ep_id,
                 "lexicon": context.lexicon
             }
         )
+
+        result = model.generate(
+            prompt_data["user_prompt"],
+            system_instruction=prompt_data["system_prompt"],
+            temperature=0.4,
+            response_mime_type="application/json",
+            file_obj=context.uploaded_file
+        )
         
         # Save raw JSON for Pass 2 to consume
         data = self._process_json_result(result, context, "Extraction")
+
         
         # Use the helper to ensure Extraction.json exists
         self._save_extraction_data(data, context)
+        
 
         print(f"\nPass 1 Complete! Review Extraction.json in {base_dir}")
         print("To continue to Pass 2 (Creative Writing), run with '--continue'")
@@ -125,7 +137,7 @@ class DraftWorkflow(ChapterMixin, Workflow):
         # Use the name of the last model to successfully touch the data
         attribution_model = seo_model if seo_model else creative_model
         
-        final_md = self._build_markdown(draft_data, final_data, context)
+        final_md = self._build_markdown(draft_data, final_data, context, model)
         self._save_final_description(final_md, context, attribution_model)
         return final_md
 
@@ -229,36 +241,48 @@ class DraftWorkflow(ChapterMixin, Workflow):
             "grandpa": grandpa_content
         }
 
-    def _generate_with_transcript(self, template_name: str, loader: PromptLoader, context: WorkflowContext, model: GeminiModel, session_data: Dict[str, Any] = None, fragments: Dict[str, Any] = None):
-        """Standardizes the temporary upload and cleanup of the transcript file."""
-        file_obj = None
-        try:
-            file_obj = model.upload_file(
-                context.transcript_path, 
-                display_name=f"TS_{context.full_ep_id}"
-            )
-            prompt_data = loader.load_prompt(
-                template_name,
-                session_data=session_data,
-                fragments=fragments
-            )
-            return model.generate(
-                prompt_data["user_prompt"],
-                system_instruction=prompt_data["system_prompt"],
-                temperature=0.4,
-                response_mime_type="application/json",
-                file_obj=file_obj
-            )
-        finally:
-            if file_obj:
-                model.delete_file(file_obj.name)
+    def _icon_for_chapter(self, title: str) -> str:
+        """Resolve a chapter icon based on chapter title keywords."""
+        lower_title = (title or "").lower()
+
+        # Lazy-load and cache the icon map once per workflow execution
+        if self._icon_map is None:
+            try:
+                self._icon_map = self._prompt_loader.load_config("chapter_icons")
+            except Exception as e:
+                self.logger.error(f"Failed to load chapter_icons.yaml: {e}")
+                self._icon_map = {}
+
+        for icon, keywords in self._icon_map.items():
+            if any(keyword in lower_title for keyword in keywords):
+                return icon
+
+        # Fallback to the default shield
+        return "🛡️"
+
+    def _format_chapters(self, chapters: List[Dict[str, Any]]) -> List[str]:
+        """Format chapters as Markdown lines with icons."""
+        formatted = []
+        for chapter in chapters:
+            timestamp = str(chapter.get("timestamp", "00:00")).strip()
+            title = str(chapter.get("title", "Untitled")).strip()
+
+            # Suppress leading 0: or 00: if hours is zero (e.g. 0:01:44 -> 01:44)
+            parts = timestamp.split(':')
+            if len(parts) == 3 and parts[0] in ('0', '00'):
+                timestamp = ':'.join(parts[1:])
+
+            icon = self._icon_for_chapter(title)
+            formatted.append(f"{timestamp} {icon} {title}".strip())
+        return formatted
+
 
     def _save_final_description(self, content: str, context: WorkflowContext, model_name: str) -> None:
         """Saves the human-readable Markdown to the episode directory."""
         save_audit_report(context.transcript_path, content, "Description", model_name)
         print("\nDraft Pipeline Complete.")
 
-    def _build_markdown(self, draft_data: dict, final_data: dict, context: WorkflowContext) -> str:
+    def _build_markdown(self, draft_data: dict, final_data: dict, context: WorkflowContext, model: GeminiModel) -> str:
         """Assembles the final document with SEO fallbacks."""
         # Use SEO fields if available, otherwise use original draft fields
         ulf = final_data.get("ulf_hook_seo", final_data.get("ulf_hook", draft_data.get("ulf_hook", "")))
@@ -269,41 +293,25 @@ class DraftWorkflow(ChapterMixin, Workflow):
         tags = final_data.get("tags", [])
 
         # Get or create chapters
-        chapters_data = self._get_or_create_chapters(context, draft_data.get("model", None))
+        chapters_data = self._get_or_create_chapters(context, model)
         chapters = chapters_data.get("chapters", [])
+        formatted_chapters = self._format_chapters(chapters)
         
-        # Format chapters with icons
-        formatted_chapters = []
-        for chapter in chapters:
-            timestamp = chapter.get("timestamp", "00:00")
-            title = chapter.get("title", "Untitled")
-            
-            # Map chapter titles to icons
-            icon = "🛡️"  # Default icon
-            if "combat" in title.lower() or "axe" in title.lower():
-                icon = "🪓"
-            elif "hunt" in title.lower() or "animal" in title.lower():
-                icon = "🐗"
-            elif "explore" in title.lower() or "mountain" in title.lower():
-                icon = "🏔️"
-            
-            formatted_chapters.append(f"{timestamp} {icon} {title}")
-        
-        # Build the markdown
-        md = f"# 📝 Triple-Threat Description: {context.season} {context.episode}\n\n"
-        md += "## 🪓 The Narrative\n\n"
-        md += f"**[Ulf's Voice]**\n{ulf}\n\n"
-        md += f"**[Grandpa's Legend]**\n{legend}\n\n"
-        md += f"**[Conrad's Chronicle]**\n{chronicle}\n\n"
-        md += "---\n\n"
-        md += "## 🔗 Continue the Journey\n"
-        md += f"{links}\n\n"
-        md += f"## 🌍 World Seed\n{world_seed}\n\n"
-        md += f"---\n\nChapters:\n"
-        md += "\n".join(formatted_chapters) + "\n\n"
-        md += "## 🏷️ SEO & Metadata\n"
-        md += f"**Injected Tags:** {', '.join(tags)}" if tags else "*No SEO injection performed.*"
-        return md
+        # Resolve the external template using the established PromptLoader pattern
+        assembly_data = self._prompt_loader.load_config("draft_assembly")
+        template = assembly_data.get("template", "")
+
+        return template.format(
+            season=context.season,
+            episode=context.episode,
+            ulf=ulf,
+            legend=legend,
+            chronicle=chronicle,
+            links=links,
+            world_seed=world_seed,
+            chapters="\n".join(formatted_chapters),
+            seo_metadata=f"**Injected Tags:** {', '.join(tags)}" if tags else "*No SEO injection performed.*"
+        )
     
     def _save_extraction_data(self, data: dict, context: WorkflowContext) -> None:
         """Saves a clean Extraction.json and a tracked audit version."""

@@ -4,13 +4,29 @@ from pathlib import Path
 from brand_cli.workflows.draft import DraftWorkflow
 from brand_cli.workflow_context import WorkflowContext
 
+@patch('brand_cli.workflows.draft.PromptLoader')
 @patch('brand_cli.workflows.draft.DraftWorkflow._run_creative_pass')
 @patch('brand_cli.workflows.draft.DraftWorkflow._run_seo_pass')
 @patch('brand_cli.workflows.draft.Path.exists')
 @patch('brand_cli.fragments.random_plus.TextPlusRandom')
 @patch('brand_cli.fragments.tagged.TaggedExternalFragment')
-def test_link_injection_with_repository_missing(mock_tagged, mock_random, mock_exists, mock_seo_pass, mock_creative_pass, tmp_path):
+def test_link_injection_with_repository_missing(mock_tagged, mock_random, mock_exists, mock_seo_pass, mock_creative_pass, mock_prompt_loader, tmp_path):
         """Test link injection fallback when repository not found"""
+        # Setup mock for PromptLoader to avoid KeyError: 'system_prompt'
+        mock_prompt_loader.return_value.load_config.side_effect = lambda name: {
+            "chapter_icons": {"🛡️": ["default"]},
+            "draft_assembly": {
+                "template": (
+                    "# 📝 Triple-Threat Description: {season} {episode}\n\n"
+                    "## 🪓 The Narrative\n\n**[Ulf's Voice]**\n{ulf}\n\n"
+                    "**[Grandpa's Legend]**\n{legend}\n\n**[Conrad's Chronicle]**\n{chronicle}\n\n"
+                    "---\n\n## 🔗 Continue the Journey\n{links}\n\n"
+                    "## 🌍 World Seed\n{world_seed}\n\n---\n\n"
+                    "Chapters:\n{chapters}\n\n## 🏷️ SEO & Metadata\n{seo_metadata}"
+                )
+            }
+        }.get(name, {})
+
         # Setup test context with all required parameters
         from types import SimpleNamespace
         
@@ -63,13 +79,29 @@ def test_link_injection_with_repository_missing(mock_tagged, mock_random, mock_e
                 assert "🔗 Continue the Journey" in str(result)
                 workflow.logger.error.assert_any_call("No World Seed content found at None")
 
+@patch('brand_cli.workflows.draft.PromptLoader')
 @patch('brand_cli.workflows.draft.DraftWorkflow._run_creative_pass')
 @patch('brand_cli.workflows.draft.DraftWorkflow._run_seo_pass')
 @patch('brand_cli.workflows.draft.Path.exists')
 @patch('brand_cli.fragments.random_plus.TextPlusRandom')
 @patch('brand_cli.fragments.tagged.TaggedExternalFragment')
-def test_world_seed_injection_with_file_found(mock_tagged, mock_random, mock_exists, mock_seo_pass, mock_creative_pass, tmp_path, monkeypatch):
+def test_world_seed_injection_with_file_found(mock_tagged, mock_random, mock_exists, mock_seo_pass, mock_creative_pass, mock_prompt_loader, tmp_path, monkeypatch):
         """Test world seed injection when file exists"""
+        # Setup mock for PromptLoader to avoid KeyError: 'system_prompt'
+        mock_prompt_loader.return_value.load_config.side_effect = lambda name: {
+            "chapter_icons": {"🛡️": ["default"]},
+            "draft_assembly": {
+                "template": (
+                    "# 📝 Triple-Threat Description: {season} {episode}\n\n"
+                    "## 🪓 The Narrative\n\n**[Ulf's Voice]**\n{ulf}\n\n"
+                    "**[Grandpa's Legend]**\n{legend}\n\n**[Conrad's Chronicle]**\n{chronicle}\n\n"
+                    "---\n\n## 🔗 Continue the Journey\n{links}\n\n"
+                    "## 🌍 World Seed\n{world_seed}\n\n---\n\n"
+                    "Chapters:\n{chapters}\n\n## 🏷️ SEO & Metadata\n{seo_metadata}"
+                )
+            }
+        }.get(name, {})
+
         # Setup test context with all required parameters
         from types import SimpleNamespace
         
@@ -131,13 +163,29 @@ def test_world_seed_injection_with_file_found(mock_tagged, mock_random, mock_exi
         assert "🪓 The Narrative" in str(result)
         workflow.logger.info.assert_any_call(f"Loaded World Seed from {str(tmp_path)}/World Seed.md")
 
+@patch('brand_cli.workflows.draft.PromptLoader')
 @patch('brand_cli.workflows.draft.DraftWorkflow._run_creative_pass')
 @patch('brand_cli.workflows.draft.DraftWorkflow._run_seo_pass')
 @patch('brand_cli.workflows.draft.Path.exists')
 @patch('brand_cli.fragments.random_plus.TextPlusRandom')
 @patch('brand_cli.fragments.tagged.TaggedExternalFragment')
-def test_world_seed_injection_with_file_missing(mock_tagged, mock_random, mock_exists, mock_seo_pass, mock_creative_pass, tmp_path):
+def test_world_seed_injection_with_file_missing(mock_tagged, mock_random, mock_exists, mock_seo_pass, mock_creative_pass, mock_prompt_loader, tmp_path):
         """Test world seed fallback when file missing"""
+        # Setup mock for PromptLoader to avoid KeyError: 'system_prompt'
+        mock_prompt_loader.return_value.load_config.side_effect = lambda name: {
+            "chapter_icons": {"🛡️": ["default"]},
+            "draft_assembly": {
+                "template": (
+                    "# 📝 Triple-Threat Description: {season} {episode}\n\n"
+                    "## 🪓 The Narrative\n\n**[Ulf's Voice]**\n{ulf}\n\n"
+                    "**[Grandpa's Legend]**\n{legend}\n\n**[Conrad's Chronicle]**\n{chronicle}\n\n"
+                    "---\n\n## 🔗 Continue the Journey\n{links}\n\n"
+                    "## 🌍 World Seed\n{world_seed}\n\n---\n\n"
+                    "Chapters:\n{chapters}\n\n## 🏷️ SEO & Metadata\n{seo_metadata}"
+                )
+            }
+        }.get(name, {})
+
         # Setup test context with all required parameters
         from types import SimpleNamespace
         
@@ -190,3 +238,29 @@ def test_world_seed_injection_with_file_missing(mock_tagged, mock_random, mock_e
             assert "[Ulf's Voice]" in str(result)
             assert "🪓 The Narrative" in str(result)
             workflow.logger.error.assert_called_with(f"No World Seed content found at None")
+
+
+@patch('brand_cli.workflows.draft.PromptLoader')
+def test_chapter_icon_helper_and_formatting(mock_prompt_loader):
+    # Setup mock for PromptLoader icons
+    mock_prompt_loader.return_value.load_config.side_effect = lambda name: {
+        "chapter_icons": {
+            "🪓": ["combat"],
+            "🐗": ["hunt"],
+            "🏔️": ["explore"]
+        }
+    }.get(name, {})
+
+    workflow = DraftWorkflow()
+    chapters = [
+        {"timestamp": "00:05", "title": "First combat scene"},
+        {"timestamp": "02:00", "title": "Hunt the boar"},
+        {"timestamp": "04:00", "title": "Explore the mountain"},
+        {"timestamp": "05:00", "title": "A neutral moment"}
+    ]
+
+    formatted = workflow._format_chapters(chapters)
+    assert formatted[0] == "00:05 🪓 First combat scene"
+    assert formatted[1] == "02:00 🐗 Hunt the boar"
+    assert formatted[2] == "04:00 🏔️ Explore the mountain"
+    assert formatted[3] == "05:00 🛡️ A neutral moment"

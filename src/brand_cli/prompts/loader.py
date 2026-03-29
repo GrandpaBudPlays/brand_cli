@@ -34,6 +34,17 @@ class PromptLoader:
         except yaml.YAMLError as e:
             raise ValueError(f"Invalid YAML in prompt file: {str(e)}")
 
+    def load_config(self, name):
+        """Loads a raw YAML file from the prompts directory."""
+        path = self.prompts_dir / f"{name}.yaml"
+        try:
+            with open(path) as f:
+                return yaml.safe_load(f)
+        except FileNotFoundError:
+            raise ValueError(f"Config file not found: {name}")
+        except yaml.YAMLError as e:
+            raise ValueError(f"Invalid YAML in config file: {str(e)}")
+
     def _render_prompt(self, prompt_data, fragments, session_data):
         context = {
             "fragments": fragments,

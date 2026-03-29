@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"name": "brand_cli",
+			"path": "../../.."
+		}
+	],
+	"settings": {
+		"cSpell.words": [
+			"Valheim"
+		],
+		"chat.editor.fontSize": 18,
+		"chat.editor.fontFamily": "Segoe UI",
+		"chat.editor.lineHeight": 1.5
+	}
+}

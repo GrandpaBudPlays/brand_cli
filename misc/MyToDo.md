@@ -1,4 +1,8 @@
 ## New Items to prioritize and Organize
+
+
+## 🛠️ Detailed Implementation Notes
+
 - Ability for the system to self diagnose. (very low priority, long range goals)
 - Cleanup the fragment implementation. Determine if the fragment class should load files or not.
 - Add 000-Global to the end of the directory search code
@@ -12,6 +16,7 @@
    - Make the prompts directory path configurable
    - Add validation for chapter data structure
 - Improve arg handling to Zero pad Saga and Episode numbers
+- Integrate with DaVinci Resolve
 
 # MyToDo.md
 
@@ -19,16 +24,26 @@
 
 | Priority | Task Label | Status | Brief Description |
 | :--- | :--- | :--- | :--- |
-| P1 | Fragment Integration | IN PROGRESS | Connect the existing Fragment classes to the PromptLoader and WorkflowContext. |
-| P1 | YAML Switchover | IN PROGRESS | Point all workflows to the PromptLoader and delete legacy Python prompt classes. |
-| P1 | Core Refactor | PENDING | Move Transcript logic out of file_manager and remove hard-coded paths. |
 | P1 | Video Chapters | PENDING | Rethink/Improve Video Chapters approach: persona-driven titles and visual styling for timestamps. |
-| P2 | Metadata Split | PENDING | Deconstruct find_transcript_and_metadata into atomic, single-purpose functions. |
-| P2 | Security & Config | PENDING | Shift API key retrieval from hard-coded patterns to os.environ in BaseAIModel. |
-| P2 | SEO Optimization | PENDING | Maximize all 500 characters for SEO optimized YouTube tags, mapping custom lingo to searchable terms. |
-| P3 | Context Visibility | PENDING | Add CLI commands to view current episode context and list available settings. |
-| P4 | UX & Terminology | PENDING | Standardize internal MAM terms (IP, Series, Season, Episode) across the CLI. |
-| P4 | Documentation | PENDING | Sync README.md and ARCHITECTURE.md with the new Fragment/YAML engine. |
+| P1 | SEO Optimization | PENDING | Maximize all 500 characters for SEO optimized YouTube tags, mapping custom lingo to searchable terms. |
+| P1 | Core Refactor | PENDING | Move Transcript logic out of file_manager and remove hard-coded paths. |
+| P1 | Fragment Integration | IN PROGRESS | Connect the existing Fragment classes to the PromptLoader and WorkflowContext. |
+| P1 | Core Refactor | IN PROGRESS | Implement Asset Manifest & PathResolver; replace hard-coded paths with a validated PathDict; add 000-Global fallback. |
+| P2 | Documentation | PENDING | Sync README.md and ARCHITECTURE.md with the new Fragment/YAML engine. |
+| P2 | Core Refactor | PENDING | Implement path dictionary; remove hard-coded paths; add 000-Global to directory search. |
+| P2 | Data Integrity | PENDING | Stop saving model names in filenames; stop saving redundant versions (JSON vs MD). |
+| P2 | YAML Switchover | IN PROGRESS | Migrate all workflows to PromptLoader (including creative pass output) and delete legacy classes. |
+| P3 | Metadata Split | PENDING | Deconstruct find_transcript_and_metadata into atomic, single-purpose functions. |
+| P3 | Robustness | PENDING | Add error handling for missing prompt files and validation for chapter data structures. |
+| P3 | UX: Arg Handling | PENDING | Improve CLI argument handling to automatically Zero-pad Saga and Episode numbers. |
+| P3 | Video Chapters | PENDING | Rethink/Improve Video Chapters approach: persona-driven titles and visual styling. |
+| P3 | Metadata Split | PENDING | Deconstruct find_transcript_and_metadata into atomic, single-purpose functions. |
+| P4 | Security & Config | PENDING | Shift API key retrieval from hard-coded patterns to os.environ in BaseAIModel. |
+| P3 | SEO Optimization | PENDING | Maximize all 500 characters for SEO optimized YouTube tags, mapping custom lingo to searchable terms. |
+| P4 | Context & Config | PENDING | Add CLI commands for context visibility; make the prompts directory path configurable. |
+| P5 | Context Visibility | PENDING | Add CLI commands to view current episode context and list available settings. |
+| P5 | UX & Terminology | PENDING | Standardize internal MAM terms (IP, Series, Season, Episode) across the CLI. |
+| P5 | Long-Range Goals | PENDING | Multi-pass Gold workflow (Post-MVP); implement system self-diagnosis logic. |
 
 ## 🛠️ Detailed Implementation Notes
 
