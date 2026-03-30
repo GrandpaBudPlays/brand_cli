@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 import json
+import yaml
 from pathlib import Path
 from typing import cast, Optional, Dict, Any, TYPE_CHECKING, Tuple, List
 from brand_cli.ai.gemini import GeminiModel
@@ -106,15 +107,16 @@ class DraftWorkflow(ChapterMixin, Workflow):
             return
 
         # 1. Creative Pass
+        assets = self._load_brand_assets(base_dir)
         self.logger.info(f"Loading extraction data from {extraction_path}")
         events_json = read_file(str(extraction_path))
-        draft_data, creative_model = self._run_creative_pass(context, model, events_json)
+        draft_data, creative_model = self._run_creative_pass(context, model, events_json, assets)
         
         if not draft_data:
             return
 
         # 2. SEO Pass (Optional)
-        final_data, seo_model = self._run_seo_pass(context, model, draft_data, events_json)
+        final_data, seo_model = self._run_seo_pass(context, model, draft_data, events_json, assets)
 
         # 3. Attempt to find and inject standard links.
         links_dir = find_file_in_hierarchy(Path(context.transcript_path), "Standard Link Repository.md")
@@ -147,11 +149,10 @@ class DraftWorkflow(ChapterMixin, Workflow):
 
     # --- Sub-Pass Logic ---
 
-    def _run_creative_pass(self, context: WorkflowContext, model: GeminiModel, events_json: str) -> Tuple[dict, str]:
+    def _run_creative_pass(self, context: WorkflowContext, model: GeminiModel, events_json: str, assets: Dict[str, str]) -> Tuple[dict, str]:
         """Pass 2: Injecting the Ulf, Grandpa, and Conrad voices into the factual events."""
         print("--- Pass 2: Creative Draft ---")
         base_dir = Path(context.transcript_path).parent
-        assets = self._load_brand_assets(base_dir)
         
         # Load ledger_entry from Gold report to maintain voice consistency
         ledger_entry = ""
@@ -196,25 +197,40 @@ class DraftWorkflow(ChapterMixin, Workflow):
         data = self._process_json_result(result, context, "Draft")
         return data, result.model_name
 
-    def _run_seo_pass(self, context: WorkflowContext, model: GeminiModel, draft_data: dict, events_json: str) -> Tuple[dict, Optional[str]]:
+    def _run_seo_pass(self, context: WorkflowContext, model: GeminiModel, draft_data: dict, events_json: str, assets: Dict[str, str]) -> Tuple[dict, Optional[str]]:
         """Pass 3: Optimizing the creative draft with SEO keywords if seo.txt exists."""
-        global_seo_path = self._prompt_loader.prompts_dir / "seo.txt"
-        seo_keywords = read_file(str(global_seo_path))
-         
-        if not seo_keywords:
-            # Fallback to local episode directory
+        # Try to load structured SEO config (Global first)
+        seo_config = None
+        try:
+            seo_config = self._prompt_loader.load_config("seo")
+        except Exception:
+            pass
+
+        if not seo_config:
+            # Fallback to local episode directory seo.yaml
             base_dir = Path(context.transcript_path).parent
-            seo_keywords = read_file(str(base_dir / "seo.txt"))
+            local_seo = base_dir / "seo.yaml"
+            if local_seo.exists():
+                try:
+                    with open(local_seo, "r", encoding="utf-8") as f:
+                        seo_config = yaml.safe_load(f)
+                except Exception as e:
+                    self.logger.error(f"Failed to load local seo.yaml: {e}")
 
-        if not seo_keywords:
-            print("\n--- No seo.txt found. Skipping SEO pass. ---")
+        if not seo_config:
+            print("\n--- No seo.yaml found. Skipping SEO pass. ---")
             return draft_data, None
-
 
         print("\n--- Pass 3: SEO Injection ---")
         prompt_data = self._prompt_loader.load_prompt(
             "draft_seo",
-            fragments={"seo_keywords": seo_keywords},
+            fragments={
+                "narrative_keywords": ", ".join(seo_config.get("narrative_keywords", [])),
+                "meta_tags": ", ".join(seo_config.get("meta_tags", [])),
+                "lexicon": assets['lexicon'],
+                "brand_voice": assets['grandpa'],
+                "ulf_voice": assets['ulf']
+            },
             session_data={
                 "draft_json": json.dumps(draft_data),
                 "events_json": events_json
@@ -314,8 +330,8 @@ class DraftWorkflow(ChapterMixin, Workflow):
         """Assembles the final document with SEO fallbacks."""
         # Use SEO fields if available, otherwise use original draft fields
         ulf = final_data.get("ulf_hook_seo", final_data.get("ulf_hook", draft_data.get("ulf_hook", "")))
-        legend = final_data.get("grandpa_legend_seo", final_data.get("grandpa_legend", draft_data.get("grandpa_legend", "")))
         chronicle = final_data.get("conrad_chronicle_seo", final_data.get("conrad_chronicle", draft_data.get("conrad_chronicle", "")))
+        legend = final_data.get("grandpa_legend_seo", final_data.get("grandpa_legend", draft_data.get("grandpa_legend", "")))
         links = final_data.get("standard_links", draft_data.get("standard_links", "No Links Provided."))
         world_seed = final_data.get("world_seed", "No World Seed Provided.")
         tags = final_data.get("tags", [])
@@ -333,8 +349,8 @@ class DraftWorkflow(ChapterMixin, Workflow):
             season=context.season,
             episode=context.episode,
             ulf=ulf,
-            legend=legend,
             chronicle=chronicle,
+            legend=legend,
             links=links,
             world_seed=world_seed,
             chapters="\n".join(formatted_chapters),

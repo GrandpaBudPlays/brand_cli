@@ -1,0 +1,34 @@
+# Global SEO Keywords Configuration
+# narrative_keywords are surgically injected into dialogue/descriptions
+narrative_keywords:
+  - "Elder Warrior Wisdom"
+  - "Valheim Meadows Tips"
+  - "Valheim Base Building"
+  - "Valheim Structural Integrity"
+  - "Valheim Chimney Build"
+  - "Valheim Boar Taming"
+  - "Burial Chambers"
+  - "Surtling Cores"
+  - "Troll Hunt"
+  - "Valheim Bronze"
+  - "Valheim Building Tips"
+  - "Structural Integrity"
+  - "Chimney Design"
+
+# meta_tags are restricted to the tags block and Conrad's technical section
+meta_tags:
+  - "Grandpa Bud Plays"
+  - "Chronicles of the Exile"
+  - "Norse Mythology Lore"
+  - "Viking Survival Saga"
+  - "Valheim Gameplay 2026"
+  - "Valheim Walkthrough"
+  - "Valheim Survival Guide"
+  - "Steam Games"
+  - "PC Gaming"
+  - "How to survive first night"
+  - "Valheim Black Forest Guide"
+  - "Valheim Bronze Age"
+  - "Valheim Boss Fight"
+  - "Black Forest Guide"
+  - "Valheim Survival"
