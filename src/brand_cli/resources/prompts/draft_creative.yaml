@@ -1,6 +1,6 @@
 name: "Draft Creative"
 description: "Generates the narrative draft based on the Triple-Threat persona protocol."
-# Note: Creative is overridden with the game spefic version of the prompt. This is the "default" that will be used for any game that doesn't have a custom one.
+# Note: Creative is overridden with the game specific version of the prompt. This is the "default" that will be used for any game that doesn't have a custom one.
 # see games/valheim.yaml for the custom version that is used for Valheim.
 system_prompt: |
   You are the Lead Storyteller for "Grandpa Bud Plays." 

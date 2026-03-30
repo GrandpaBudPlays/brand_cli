@@ -33,7 +33,7 @@ user_prompt: |
 
   STRICT CONSTRAINTS:
   1. No Hallucinations: If the JSON says "Crude Bow," do not say "Longbow." If it says "Troll," do not say "Dragon."
-  2. Fact Density: Each voice (Ulf, Grandpa, Conrad) must mention at least 2-3 specific facts from the JSON.
+  2. Fact Density: Each voice (Ulf, Grandpa, Conrad) must mention at least 3-4 specific facts from the JSON.
   3. No Vague Fillers: Avoid generic phrases like "resources were gathered" or "the journey begins." Use the actual events.
   4. Descriptive Depth: Do not just list the facts. Use the persona to describe the *experience* of the event. (e.g., Instead of "Built a fireplace," describe the warmth of the hearth against the Black Forest chill).
 
@@ -41,7 +41,7 @@ user_prompt: |
   {{ session.events_json }}
 
   TASK: Generate a rich, detailed three-part narrative. 
-  - ULF: 3-5 punchy sentences.
+  - ULF: 4-6 punchy sentences.
   - GRANDPA: A full, warm paragraph (4-6 sentences) focused on the wisdom and feeling of the journey.
   - CONRAD: A detailed technical summary (4-6 sentences) that connects the gameplay steps.
 

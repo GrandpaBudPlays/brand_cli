@@ -1,34 +1,39 @@
-# Global SEO Keywords Configuration
-# narrative_keywords are surgically injected into dialogue/descriptions
+# brand_cli/resources/prompts/seo.yaml
+
+# NARRATIVE_KEYWORDS: Injected into Conrad (Technical) and Grandpa (Lore).
+# These are "soft" keywords that fit both personas.
 narrative_keywords:
   - "Elder Warrior Wisdom"
-  - "Valheim Meadows Tips"
-  - "Valheim Base Building"
-  - "Valheim Structural Integrity"
-  - "Valheim Chimney Build"
-  - "Valheim Boar Taming"
-  - "Burial Chambers"
-  - "Surtling Cores"
-  - "Troll Hunt"
-  - "Valheim Bronze"
-  - "Valheim Building Tips"
-  - "Structural Integrity"
-  - "Chimney Design"
+  - "Viking Hearth and Home"
+  - "Boar Taming Lore"
+  - "The Forsaken"
+  - "Stone-marrow tools" # Lore-friendly version of Flint
+  - "Strength of Stars" # Lore-friendly version of Starred Mobs
 
-# meta_tags are restricted to the tags block and Conrad's technical section
+# TECHNICAL_KEYWORDS: Injected ONLY into Conrad's Chronicle.
+# These are high-value search terms that are too "clinical" for Grandpa.
+technical_keywords:
+  - "Valheim Meadows Survival"
+  - "Valheim Base Architecture"
+  - "Structural Integrity Guide"
+  - "Valheim Chimney Tutorial"
+  - "Valheim Progression Guide"
+  - "Black Forest Survival"
+  - "Burial Chambers Exploration"
+  - "Surtling Core Location"
+  - "Troll Hunting Tactics"
+  - "Flint Axe Upgrade"
+
+# META_TAGS: Strictly for the bottom tag stack.
 meta_tags:
   - "Grandpa Bud Plays"
-  - "Chronicles of the Exile"
-  - "Norse Mythology Lore"
-  - "Viking Survival Saga"
+  - "Conrad the Exile"
+  - "Wholesome Gaming"
+  - "Slow Gaming"
+  - "Senior Gamer"
+  - "Valheim Lore Playthrough"
   - "Valheim Gameplay 2026"
   - "Valheim Walkthrough"
-  - "Valheim Survival Guide"
-  - "Steam Games"
-  - "PC Gaming"
-  - "How to survive first night"
-  - "Valheim Black Forest Guide"
-  - "Valheim Bronze Age"
-  - "Valheim Boss Fight"
-  - "Black Forest Guide"
-  - "Valheim Survival"
+  - "how to build a chimney in Valheim"
+  - "Valheim beginners 2026"
+  - "Valheim base building tips"

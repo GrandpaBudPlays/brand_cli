@@ -44,11 +44,16 @@ class DraftWorkflow(ChapterMixin, Workflow):
             print(f"Error: Gold report (Gold.md) not found in {base_dir}. Please run the 'gold' or 'audit' workflow first.")
             return
 
+        success = False
         try:
             if pass_number == "1":
-                return self._run_extraction_pass(context, model)
+                result = self._run_extraction_pass(context, model)
+                success = True
+                return result
             elif pass_number == "2":
-                return self._run_creative_and_seo_pipeline(context, model)
+                result = self._run_creative_and_seo_pipeline(context, model)
+                success = True
+                return result
             else:
                 self.logger.error(f"Unknown pass number: {pass_number}")
                 return None
@@ -57,6 +62,10 @@ class DraftWorkflow(ChapterMixin, Workflow):
             if context.uploaded_file and pass_number == "1":
                 self.logger.info("Cleaning up transcript after Pass 1")
                 model.delete_file(context.uploaded_file)
+
+            if pass_number == "1" and success:
+                print(f"\nPass 1 Complete! Review Extraction.json in {base_dir}")
+                print("To continue to Pass 2 (Creative Writing), run with '--continue'")
 
     # --- Pipeline Coordination ---
 
@@ -92,9 +101,6 @@ class DraftWorkflow(ChapterMixin, Workflow):
         # Use the helper to ensure Extraction.json exists
         self._save_extraction_data(data, context)
         
-
-        print(f"\nPass 1 Complete! Review Extraction.json in {base_dir}")
-        print("To continue to Pass 2 (Creative Writing), run with '--continue'")
         return data
 
     def _run_creative_and_seo_pipeline(self, context: WorkflowContext, model: GeminiModel):
@@ -226,6 +232,7 @@ class DraftWorkflow(ChapterMixin, Workflow):
             "draft_seo",
             fragments={
                 "narrative_keywords": ", ".join(seo_config.get("narrative_keywords", [])),
+                "technical_keywords": ", ".join(seo_config.get("technical_keywords", [])),
                 "meta_tags": ", ".join(seo_config.get("meta_tags", [])),
                 "lexicon": assets['lexicon'],
                 "brand_voice": assets['grandpa'],
@@ -275,6 +282,7 @@ class DraftWorkflow(ChapterMixin, Workflow):
         protocol_content = self._load_file_with_logging(ip_root, "Descriptions.md", "Descriptions Protocol")
         lexicon_content = self._load_file_with_logging(ip_root, "Saga-Lexicon-Valheim.md", "Lexicon")
         ulf_content = self._load_file_with_logging(arc_dir, "Ulf Persona.md", "Ulf Persona")
+        # Conrad is currently missing an external persona file reference here.
         series_metadata = self._load_file_with_logging(archive_root, ".series_metadata", "Series Metadata")
 
         return {
