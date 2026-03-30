@@ -114,7 +114,7 @@ class DraftWorkflow(ChapterMixin, Workflow):
             return
 
         # 2. SEO Pass (Optional)
-        final_data, seo_model = self._run_seo_pass(context, model, draft_data)
+        final_data, seo_model = self._run_seo_pass(context, model, draft_data, events_json)
 
         # 3. Attempt to find and inject standard links.
         links_dir = find_file_in_hierarchy(Path(context.transcript_path), "Standard Link Repository.md")
@@ -196,21 +196,29 @@ class DraftWorkflow(ChapterMixin, Workflow):
         data = self._process_json_result(result, context, "Draft")
         return data, result.model_name
 
-    def _run_seo_pass(self, context: WorkflowContext, model: GeminiModel, draft_data: dict) -> Tuple[dict, Optional[str]]:
+    def _run_seo_pass(self, context: WorkflowContext, model: GeminiModel, draft_data: dict, events_json: str) -> Tuple[dict, Optional[str]]:
         """Pass 3: Optimizing the creative draft with SEO keywords if seo.txt exists."""
-        base_dir = Path(context.transcript_path).parent
-        seo_keywords = read_file(str(base_dir / "seo.txt"))
-        
+        global_seo_path = self._prompt_loader.prompts_dir / "seo.txt"
+        seo_keywords = read_file(str(global_seo_path))
+         
+        if not seo_keywords:
+            # Fallback to local episode directory
+            base_dir = Path(context.transcript_path).parent
+            seo_keywords = read_file(str(base_dir / "seo.txt"))
+
         if not seo_keywords:
             print("\n--- No seo.txt found. Skipping SEO pass. ---")
             return draft_data, None
 
+
         print("\n--- Pass 3: SEO Injection ---")
-        loader = PromptLoader()
-        prompt_data = loader.load_prompt(
+        prompt_data = self._prompt_loader.load_prompt(
             "draft_seo",
             fragments={"seo_keywords": seo_keywords},
-            session_data={"draft_json": json.dumps(draft_data)}
+            session_data={
+                "draft_json": json.dumps(draft_data),
+                "events_json": events_json
+            }
         )
         prompt = prompt_data["user_prompt"]
         

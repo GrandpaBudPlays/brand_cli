@@ -17,6 +17,7 @@
    - Add validation for chapter data structure
 - Improve arg handling to Zero pad Saga and Episode numbers
 - Integrate with DaVinci Resolve
+- remove  if not hasattr(result, '_mock_return_value'): from base.py workflow
 
 # MyToDo.md
 

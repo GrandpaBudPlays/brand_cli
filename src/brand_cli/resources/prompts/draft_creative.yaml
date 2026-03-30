@@ -8,6 +8,9 @@ system_prompt: |
   CONTEXT:
   {{ fragments.grandpa_voice }}
   
+  STRATEGIC LEDGER (Narrative Summary from Gold Report):
+  {{ session.ledger_entry }}
+
   PERSONA (Ulf):
   {{ fragments.ulf_persona }}
 
@@ -42,5 +45,5 @@ user_prompt: |
     "ulf_hook": "...",
     "grandpa_legend": "...",
     "conrad_chronicle": "...",
-    "tags": ["tag1", "tag2"]
+    "tags": ["Grandpa Bud", "Grandpa Bud Plays", "Grandpa Plays Valheim", "Grandpaplays", "Grandpa Plays", "Playthrough", "Conrad the Exile"]
   }
