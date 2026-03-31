@@ -239,6 +239,8 @@ class DraftWorkflow(ChapterMixin, Workflow):
                 "ulf_voice": assets['ulf']
             },
             session_data={
+                "episode_id": context.full_ep_id,
+                "lexicon": context.lexicon,
                 "draft_json": json.dumps(draft_data),
                 "events_json": events_json
             }

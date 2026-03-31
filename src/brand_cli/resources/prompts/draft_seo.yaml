@@ -32,10 +32,10 @@ user_prompt: |
   - Meta Tags (For Tag Stack): {{ fragments.meta_tags }}
 
   Creative Draft (JSON):
-  {{ session_data.draft_json }}
+  {{ session.draft_json }}
 
   Raw Event Context:
-  {{ session_data.events_json }}
+  {{ session.events_json }}
 
   TASK:
   1. Use 'Semantic Substitution' to weave the keywords into the existing narrative segments according to the Persona Constraints.
