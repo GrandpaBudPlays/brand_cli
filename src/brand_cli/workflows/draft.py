@@ -183,7 +183,8 @@ class DraftWorkflow(ChapterMixin, Workflow):
                 "ulf_persona": assets['ulf'],
                 "descriptions_protocol": assets['protocol'],
                 "lexicon": assets['lexicon'],
-                "grandpa_voice": assets['grandpa'] 
+                "grandpa_voice": assets['grandpa'],
+                "conrad_voice": assets['conrad']    
             },
             session_data={
                 "game": "valheim",
@@ -236,7 +237,8 @@ class DraftWorkflow(ChapterMixin, Workflow):
                 "meta_tags": ", ".join(seo_config.get("meta_tags", [])),
                 "lexicon": assets['lexicon'],
                 "brand_voice": assets['grandpa'],
-                "ulf_voice": assets['ulf']
+                "ulf_voice": assets['ulf'],
+                "conrad_voice": assets['conrad']
             },
             session_data={
                 "episode_id": context.full_ep_id,
@@ -271,29 +273,32 @@ class DraftWorkflow(ChapterMixin, Workflow):
         return content or ""
 
     def _load_brand_assets(self, base_dir: Path) -> Dict[str, str]:
-        """Climbs the directory tree to find Ulf's Persona, the Protocol, and Brand Context."""
-     
+        """Climbs the directory tree to find persona, protocol, and brand context files."""
         archive_root = find_file_in_hierarchy(base_dir, ".series_metadata") or base_dir
-        ip_root = find_file_in_hierarchy(base_dir, "Descriptions.md") or base_dir
-        arc_dir = find_file_in_hierarchy(base_dir, "Ulf Persona.md") or base_dir
-        global_core_dir = archive_root / "000-Global-Core"
-        if not (global_core_dir / "Brand-Voice.md").exists():
-            global_core_dir = base_dir
+        global_core = archive_root / "000-Global-Core"
 
-        grandpa_content = self._load_file_with_logging(global_core_dir, "Brand-Voice.md", "Grandpa")
-        protocol_content = self._load_file_with_logging(ip_root, "Descriptions.md", "Descriptions Protocol")
-        lexicon_content = self._load_file_with_logging(ip_root, "Saga-Lexicon-Valheim.md", "Lexicon")
-        ulf_content = self._load_file_with_logging(arc_dir, "Ulf Persona.md", "Ulf Persona")
-        # Conrad is currently missing an external persona file reference here.
-        series_metadata = self._load_file_with_logging(archive_root, ".series_metadata", "Series Metadata")
-
-        return {
-            "ulf": ulf_content,
-            "protocol": protocol_content,
-            "series": series_metadata,
-            "lexicon": lexicon_content,
-            "grandpa": grandpa_content
+        # key: (filename, description, preferred_dir)
+        # Note: Lexicon is redundant here as it is already in context.lexicon
+        # Conrad is currently missing an external persona file reference.
+        mapping = {
+            "series":   (".series_metadata", "Series Metadata", archive_root),
+            "protocol": ("Descriptions.md", "Descriptions Protocol", None),
+            "lexicon":  ("Saga-Lexicon-Valheim.md", "Lexicon", None),
+            "ulf":      ("Ulf Persona.md", "Ulf Persona", None),
+            "conrad":   ("Conrad Persona.md", "Conrad Persona", None),
+            "grandpa":  ("Brand-Voice.md", "Grandpa Persona", global_core if (global_core / "Brand-Voice.md").exists() else None)
         }
+
+        assets = {}
+        for key, (filename, description, preferred_dir) in mapping.items():
+            # 1. Determine which directory to look in
+            # Priority: preferred_dir -> search up the tree -> fallback to base_dir
+            resolved_dir = preferred_dir or find_file_in_hierarchy(base_dir, filename) or base_dir
+            
+            # 2. Load the content and log the result
+            assets[key] = self._load_file_with_logging(resolved_dir, filename, description)
+
+        return assets
 
     def _icon_for_chapter(self, title: str) -> str:
         """Resolve a chapter icon based on chapter title keywords."""
@@ -338,10 +343,11 @@ class DraftWorkflow(ChapterMixin, Workflow):
 
     def _build_markdown(self, draft_data: dict, final_data: dict, context: WorkflowContext, model: GeminiModel) -> str:
         """Assembles the final document with SEO fallbacks."""
+        # Use draft fields if available, otherwise use final fields, keep UlF and Grandpa pure, no SEO, when available
+        ulf = draft_data.get("ulf_hook", final_data.get("ulf_hook_seo", ""))
+        legend = draft_data.get("grandpa_legend", final_data.get("grandpa_legend_seo", ""))
         # Use SEO fields if available, otherwise use original draft fields
-        ulf = final_data.get("ulf_hook_seo", final_data.get("ulf_hook", draft_data.get("ulf_hook", "")))
-        chronicle = final_data.get("conrad_chronicle_seo", final_data.get("conrad_chronicle", draft_data.get("conrad_chronicle", "")))
-        legend = final_data.get("grandpa_legend_seo", final_data.get("grandpa_legend", draft_data.get("grandpa_legend", "")))
+        chronicle = final_data.get("conrad_chronicle_seo", draft_data.get("conrad_chronicle", ""))
         links = final_data.get("standard_links", draft_data.get("standard_links", "No Links Provided."))
         world_seed = final_data.get("world_seed", "No World Seed Provided.")
         tags = final_data.get("tags", [])

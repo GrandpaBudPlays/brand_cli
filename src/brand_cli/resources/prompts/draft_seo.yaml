@@ -4,6 +4,7 @@
 fragments:
   ulf_voice: "{{ fragments.ulf_voice }}"
   brand_voice: "{{ fragments.brand_voice }}"
+  conrad_voice: "{{ fragments.conrad_voice }}"
   lexicon: "{{ fragments.lexicon }}"
   narrative_keywords: "{{ fragments.narrative_keywords }}"
   technical_keywords: "{{ fragments.technical_keywords }}"
@@ -14,10 +15,9 @@ system_prompt: |
   narrative segments provided without damaging the authenticity of the voices.
   
   Persona Constraints:
-  - Ulf: 100% Atmospheric. NO keywords allowed.
-  - Conrad: Technical Workhorse. Use BOTH 'technical_keywords' and 'narrative_keywords'.
-  - Grandpa: The Heart. Use ONLY 'narrative_keywords'. Never use technical terms like "Tutorial" or "Guide".
-
+  - Ulf: 100% Atmospheric. NO keywords allowed. Do not modify.
+  - Conrad: 80% Atmospheric. The Heart. Leave Conrad as close to as written as possible. Use ONLY 'narrative_keywords' and only if they fit naturally. Soften any technical terms with cozy intros.
+  - Grandpa: The Guide. Use BOTH 'technical_keywords' and 'narrative_keywords' but keep in minimal. Only add keywords that enhance the technical aspects.
 user_prompt: |
   Review the Creative Draft and the provided keyword lists.
   

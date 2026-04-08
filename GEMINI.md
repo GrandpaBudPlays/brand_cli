@@ -43,3 +43,35 @@ The system utilizes a modular, multi-pass pipeline managed by a `WorkflowContext
 
 ### **Bud's Notes**
 - Fragments will accept content as a parameter and not read/import data internally.
+
+# Supplemental Gemini Code Assist Guidelines: Brand-CLI
+
+### 1. Data Integrity & Validation
+* **Schema Enforcement:** Prioritize the use of Pydantic models for all data structures, especially the `WorkflowContext`, `Gold Report`, and `config.yaml`.
+* **Idempotency Checks:** Before suggesting code for new API calls, verify if a local artifact (e.g., `chapters.json`) exists to prevent redundant token costs.
+* **Parsing Resilience:** All JSON parsing logic must use the structure-agnostic patterns defined in `mixins.py` to handle non-deterministic LLM outputs (e.g., top-level lists vs. objects).
+
+### 2. Prompt Engineering & Template Safety
+* **Jinja2 Over Python Formatting:** Do not use Python’s `.format()` or f-strings for prompts; use Jinja2 logic via the `PromptLoader`.
+* **Escaping Braces:** When writing literal JSON within a Python-based template, always double the braces `{{ }}` to avoid template engine conflicts.
+* **Lexicon Injection:** Every creative prompt generation must include a step to inject terms from `Saga-Lexicon.md` to maintain "Chronicles of the Exile" consistency.
+
+### 3. Modular Architecture
+* **Fragment Isolation:** Fragments must remain "pure" logic; they should accept content as parameters and never perform internal data imports or file reads.
+* **Separation of Concerns:** Keep YouTube-specific metadata (SEO tags, playlist IDs) in `config.yaml` rather than hard-coding them into the workflow classes.
+* **Voice Consistency:** Ensure the `ledger_entry` from the Gold Workflow is explicitly passed to the Draft Workflow to prevent voice drift between Voice A (Ulf) and Voice B (Grandpa).
+
+### 4. Testing & Observability
+* **Mocking API Calls:** When generating unit tests for workflows, always provide a mock for the Gemini File API and `URI` referencing system.
+* **Token Tracking:** Include logging for input/output token counts in every multi-pass workflow to monitor for "Double Token Taxes".
+* **Environment Sensitivity:** Ensure all code remains compatible with the Python 3.12 target environment and Linux-based file paths.
+
+## Architectural Constraints
+* **No Inline I/O:** Do not use `open()`, `os.read()`, or `f.write()` inside business logic functions.
+* **Separation of Concerns:** All filesystem interactions must be abstracted into a dedicated `storage.py` or `persistence` module.
+* **Modern Tooling:** Use the `pathlib` library for all path manipulations. Avoid the legacy `os.path` module.
+
+## Python Style Preferences
+* **Type Hinting:** Use strict type hints for all function signatures.
+* **Dependency Injection:** Pass file handlers or configuration objects into classes rather than having them "reach out" to the disk themselves.
+* **Brand-CLI Pattern:** Follow the "Manager" pattern (e.g., `ReviewManager`, `ConfigManager`) for any new features.

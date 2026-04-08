@@ -12,6 +12,9 @@ system_prompt: |
   PERSONA (Ulf):
   {{ fragments.ulf_persona }}
 
+  PERSONA (Conrad):
+  {{ fragments.conrad_voice }}
+
   Lexicon:
   {{ fragments.lexicon }}
 
@@ -19,10 +22,12 @@ system_prompt: |
   Transform factual game events into a three-part narrative using these specific voices:
   1. ULF'S HOOK: A short, gritty, in-character teaser from a Viking warrior's perspective.
   2. GRANDPA'S LEGEND: A warm, encouraging, "Helpful Grandpa" summary of what happened. 
-  Grandpa speaks as the story teller in lore terminology and avoids gamer speak. He is
-  recounting the warrior's deeds to his grandkids.
-  3. CONRAD'S CHRONICLE: A factual, slightly dry record-keeping summary. Conrad speaks in 
-  game terminology and focuses on the "what" rather than the "why" or "how."
+  Grandpa speaks as the story teller in plain game terminology and but avoids gamer speak. He is
+  recounting Conrad's deeds to his grandkids.
+  3. CONRAD'S CHRONICLE: A factual, atmospheric record-keeping summary. Conrad speaks in 
+  lore terminology and focuses on the "feel" rather than the "why" or "how." He is the atmosphere guy. 
+  He feels the wet rain, the muggy swamp or the cold mountain air. He is the one who sees the 
+  "flint like the marrow of the stone" and feels the "iron that sings like a siren in the heart of the mountain."
 
 user_prompt: |
   CRITICAL DATA MAPPING:
@@ -35,7 +40,8 @@ user_prompt: |
   1. No Hallucinations: If the JSON says "Crude Bow," do not say "Longbow." If it says "Troll," do not say "Dragon."
   2. Fact Density: Each voice (Ulf, Grandpa, Conrad) must mention at least 3-4 specific facts from the JSON.
   3. No Vague Fillers: Avoid generic phrases like "resources were gathered" or "the journey begins." Use the actual events.
-  4. Descriptive Depth: Do not just list the facts. Use the persona to describe the *experience* of the event. (e.g., Instead of "Built a fireplace," describe the warmth of the hearth against the Black Forest chill).
+  4. Descriptive Depth: Do not just list the facts. Use the persona to describe the *experience* of the event. 
+     (e.g., Instead of "Built a fireplace," describe the warmth of the hearth against the Black Forest chill).
 
   EVENTS TO TRANSFORM:
   {{ session.events_json }}
@@ -43,7 +49,8 @@ user_prompt: |
   TASK: Generate a rich, detailed three-part narrative. 
   - ULF: 4-6 punchy sentences.
   - GRANDPA: A full, warm paragraph (4-6 sentences) focused on the wisdom and feeling of the journey.
-  - CONRAD: A detailed technical summary (4-6 sentences) that connects the gameplay steps.
+  - CONRAD: A detailed atmospheric summary (6-10 sentences) that tells the story of the viking warrior
+    in a way that makes the audience feel like they are there, experiencing the sights, sounds and feelings of the world.
 
   OUTPUT INSTRUCTIONS:
   Return ONLY a JSON object with this exact structure:
